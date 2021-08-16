@@ -1,0 +1,31 @@
+name: Bisque
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: |
+          sudo apt update && \
+          sudo apt install \
+              curl
+      - run: |
+          cargo fmt -- --check
+      - run: |
+          cargo test
+      - run: |
+          cargo build --release
+          ls -alh target/release
+      - run: |
+          cargo clippy -- --no-deps -D warnings
