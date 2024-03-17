@@ -45,7 +45,7 @@ Content-Type: application/json; charset=UTF-8\r\n\r\n\
 Content-Type: application/octet-stream\r\n\r\n\
 {}\r\n\
 --boundary--",
-                    serde_json::to_string(&metadata).unwrap(),
+                    serde_json::to_string(&metadata)?,
                     // TODO: read file in chunks
                     base64::encode(&contents)
                 );

@@ -25,3 +25,9 @@ impl From<reqwest::Error> for Error {
         Error::ReqwestError(e)
     }
 }
+
+impl From<serde_json::Error> for Error {
+    fn from(e: serde_json::Error) -> Self {
+        Error::SerdeJsonError(e)
+    }
+}
