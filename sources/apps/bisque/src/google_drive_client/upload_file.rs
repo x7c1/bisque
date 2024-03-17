@@ -5,10 +5,9 @@ use std::fs::File;
 use std::io::Read;
 
 impl GoogleDriveClient {
-
     /// https://developers.google.com/drive/api/guides/manage-uploads#http_1
     pub fn upload_file(&self, params: UploadFileParams) -> Result<()> {
-        let mut file = File::open(&params.original_file_path).expect("cannot open");
+        let mut file = File::open(&params.src_file_path).expect("cannot open");
         let file_size = file.metadata().unwrap().len();
         println!("[upload_file] File size: {}", file_size);
         println!("[upload_file] {:#?}", params);
@@ -22,8 +21,8 @@ impl GoogleDriveClient {
         let client = reqwest::blocking::Client::new();
 
         let metadata = Metadata {
-            name: params.file_name,
-            parents: vec![params.folder_id],
+            name: params.dst_name,
+            parents: vec![params.dst_folder_id],
         };
 
         let response = client
@@ -63,9 +62,9 @@ Content-Type: application/octet-stream\r\n\r\n\
 
 #[derive(Debug)]
 pub struct UploadFileParams {
-    pub original_file_path: String,
-    pub file_name: String,
-    pub folder_id: String,
+    pub src_file_path: String,
+    pub dst_name: String,
+    pub dst_folder_id: String,
 }
 
 #[derive(Debug, serde::Serialize)]
