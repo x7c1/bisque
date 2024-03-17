@@ -16,7 +16,7 @@ impl AccessTokenLoader {
     pub fn load(&self) -> Result<AccessToken> {
         let refresh_token = self.retrieve_refresh_token()?;
         let access_token = self.oauth_client.refresh_access_token(&refresh_token)?;
-        return Ok(access_token);
+        Ok(access_token)
     }
 
     fn retrieve_refresh_token(&self) -> Result<RefreshToken> {

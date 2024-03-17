@@ -1,5 +1,7 @@
 use crate::google_drive_client::GoogleDriveClient;
 use crate::Result;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use std::fs::File;
 use std::io::Read;
@@ -47,7 +49,7 @@ Content-Type: application/octet-stream\r\n\r\n\
 --boundary--",
                     serde_json::to_string(&metadata)?,
                     // TODO: read file in chunks
-                    base64::encode(&contents)
+                    BASE64_STANDARD.encode(&contents),
                 );
                 body
             })

@@ -1,4 +1,5 @@
 use crate::oauth_client::{AccessToken, OAuthClient, RefreshToken};
+use crate::Result;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct RefreshAccessTokenResponse {
@@ -9,7 +10,7 @@ pub struct RefreshAccessTokenResponse {
 
 impl OAuthClient {
     /// https://developers.google.com/identity/protocols/oauth2/web-server#offline
-    pub fn refresh_access_token(&self, refresh_token: &RefreshToken) -> crate::Result<AccessToken> {
+    pub fn refresh_access_token(&self, refresh_token: &RefreshToken) -> Result<AccessToken> {
         let client = reqwest::blocking::Client::new();
         let params = [
             ("client_id", self.client_id.as_str()),

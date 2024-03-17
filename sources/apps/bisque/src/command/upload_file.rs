@@ -21,7 +21,7 @@ pub fn run(args: Args) -> Result<()> {
     drive_client.upload_file(UploadFileParams {
         src_file_path: file_path.to_string(),
         // TODO: remove unwrap
-        dst_name: file_path.split("/").last().unwrap().to_string(),
+        dst_name: file_path.split('/').last().unwrap().to_string(),
         dst_folder_id: args.folder_id,
     })?;
 
