@@ -1,15 +1,16 @@
+mod reader;
+use reader::Reader;
+
 use crate::google_drive_client::GoogleDriveClient;
 use crate::Result;
-use base64::prelude::BASE64_STANDARD;
-use base64::Engine;
+use reqwest::blocking::Body;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use std::fs::File;
-use std::io::Read;
 
 impl GoogleDriveClient {
     /// https://developers.google.com/drive/api/guides/manage-uploads#http_1
     pub fn upload_file(&self, params: UploadFileParams) -> Result<()> {
-        let mut file = File::open(&params.src_file_path).expect("cannot open");
+        let file = File::open(&params.src_file_path).expect("cannot open");
         let file_size = file.metadata()?.len();
         println!("[upload_file] File size: {}", file_size);
         println!("[upload_file] {:#?}", params);
@@ -27,31 +28,18 @@ impl GoogleDriveClient {
             parents: vec![params.dst_folder_id],
         };
 
+        // TODO: change boundary to random string
+        let boundary = "boundary";
         let response = client
             .post("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
             .header("Authorization", format!("Bearer {}", self.access_token))
             .header(
                 "Content-Type",
-                // TODO: change boundary to random string
-                format!("multipart/related; boundary={}", "boundary"),
+                format!("multipart/related; boundary={}", boundary),
             )
             .body({
-                let mut contents = Vec::new();
-                file.read_to_end(&mut contents).expect("cannot read");
-
-                let body = format!(
-                    "--boundary\r\n\
-Content-Type: application/json; charset=UTF-8\r\n\r\n\
-{}\r\n\
---boundary\r\n\
-Content-Type: application/octet-stream\r\n\r\n\
-{}\r\n\
---boundary--",
-                    serde_json::to_string(&metadata)?,
-                    // TODO: read file in chunks
-                    BASE64_STANDARD.encode(&contents),
-                );
-                body
+                let reader = Reader::new(file, metadata, boundary)?;
+                Body::new(reader)
             })
             .send()?;
 
