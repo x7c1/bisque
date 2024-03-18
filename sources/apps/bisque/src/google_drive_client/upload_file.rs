@@ -10,7 +10,7 @@ impl GoogleDriveClient {
     /// https://developers.google.com/drive/api/guides/manage-uploads#http_1
     pub fn upload_file(&self, params: UploadFileParams) -> Result<()> {
         let mut file = File::open(&params.src_file_path).expect("cannot open");
-        let file_size = file.metadata().unwrap().len();
+        let file_size = file.metadata()?.len();
         println!("[upload_file] File size: {}", file_size);
         println!("[upload_file] {:#?}", params);
 
