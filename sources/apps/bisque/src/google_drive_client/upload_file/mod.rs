@@ -1,3 +1,6 @@
+mod generate_boundary;
+use generate_boundary::generate_boundary;
+
 mod reader;
 use reader::Reader;
 
@@ -24,8 +27,9 @@ impl GoogleDriveClient {
             name: params.dst_name,
             parents: vec![params.dst_folder_id],
         };
-        // TODO: change boundary to random string
-        let boundary = "boundary";
+        let boundary = generate_boundary();
+        println!("[upload_file] boundary: {}", boundary);
+
         let response = self
             .client
             .post("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
@@ -34,11 +38,11 @@ impl GoogleDriveClient {
                 "Content-Type",
                 format!("multipart/related; boundary={}", boundary),
             )
-            .body(Body::new(Reader::new(file, metadata, boundary)?))
+            .body(Body::new(Reader::new(file, metadata, &boundary)?))
             .send()?;
 
         println!("[upload_file] Response status: {}", response.status());
-        println!("[upload_file] Response: {:?}", response.text()?);
+        println!("[upload_file] Response: {}", response.text()?);
 
         Ok(())
     }
