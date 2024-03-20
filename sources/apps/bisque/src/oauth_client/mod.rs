@@ -14,6 +14,7 @@ use crate::Result;
 
 /// https://developers.google.com/identity/protocols/oauth2/web-server
 pub struct OAuthClient {
+    client: reqwest::blocking::Client,
     client_id: String,
     client_secret: String,
 }
@@ -28,6 +29,7 @@ impl OAuthClient {
         let client_secret = std::env::var("GOOGLE_CLIENT_SECRET")?;
 
         Ok(Self {
+            client: reqwest::blocking::Client::new(),
             client_id,
             client_secret,
         })

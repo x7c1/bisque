@@ -20,17 +20,14 @@ impl GoogleDriveClient {
             CONTENT_TYPE,
             HeaderValue::from_static("application/json; charset=UTF-8"),
         );
-
-        let client = reqwest::blocking::Client::new();
-
         let metadata = Metadata {
             name: params.dst_name,
             parents: vec![params.dst_folder_id],
         };
-
         // TODO: change boundary to random string
         let boundary = "boundary";
-        let response = client
+        let response = self
+            .client
             .post("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
             .header("Authorization", format!("Bearer {}", self.access_token))
             .header(
@@ -38,7 +35,7 @@ impl GoogleDriveClient {
                 format!("multipart/related; boundary={}", boundary),
             )
             .body({
-                let reader = Reader::new(file, metadata, boundary)?;
+                let reader = Reader::from(file, metadata, boundary)?;
                 Body::new(reader)
             })
             .send()?;

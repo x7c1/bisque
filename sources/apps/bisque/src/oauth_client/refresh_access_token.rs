@@ -11,14 +11,13 @@ pub struct RefreshAccessTokenResponse {
 impl OAuthClient {
     /// https://developers.google.com/identity/protocols/oauth2/web-server#offline
     pub fn refresh_access_token(&self, refresh_token: &RefreshToken) -> Result<AccessToken> {
-        let client = reqwest::blocking::Client::new();
         let params = [
             ("client_id", self.client_id.as_str()),
             ("client_secret", self.client_secret.as_str()),
             ("refresh_token", refresh_token.as_str()),
             ("grant_type", "refresh_token"),
         ];
-        let response = client.post(Self::TOKEN_URL).form(&params).send()?;
+        let response = self.client.post(Self::TOKEN_URL).form(&params).send()?;
         println!(
             "[refresh_access_token] Response status: {}",
             response.status()

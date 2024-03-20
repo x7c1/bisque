@@ -3,12 +3,10 @@ use crate::Result;
 use std::fs::File;
 use std::io::{Cursor, Read};
 
-pub struct Reader {
-    inner: Box<dyn Read + Send>,
-}
+pub struct Reader;
 
 impl Reader {
-    pub fn new(file: File, metadata: Metadata, boundary: &str) -> Result<Reader> {
+    pub fn from(file: File, metadata: Metadata, boundary: &str) -> Result<impl Read> {
         let boundary = Cursor::new(format!("--{boundary}"));
         let metadata = Cursor::new(serde_json::to_string(&metadata)?);
         let reader = boundary
@@ -22,14 +20,6 @@ impl Reader {
             .chain("\r\n".as_bytes())
             .chain(boundary.chain("--".as_bytes()));
 
-        Ok(Reader {
-            inner: Box::new(reader),
-        })
-    }
-}
-
-impl Read for Reader {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        self.inner.read(buf)
+        Ok(reader)
     }
 }

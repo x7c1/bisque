@@ -9,7 +9,6 @@ pub struct ExchangeAuthCodeResponse {
 impl OAuthClient {
     /// https://developers.google.com/identity/protocols/oauth2/web-server#exchange-authorization-code
     pub fn exchange_auth_code(&self, auth_code: &AuthCode) -> crate::Result<RefreshToken> {
-        let client = reqwest::blocking::Client::new();
         let params = [
             ("client_id", self.client_id.as_str()),
             ("client_secret", self.client_secret.as_str()),
@@ -17,7 +16,7 @@ impl OAuthClient {
             ("grant_type", "authorization_code"),
             ("redirect_uri", Self::REDIRECT_URI),
         ];
-        let response = client.post(Self::TOKEN_URL).form(&params).send()?;
+        let response = self.client.post(Self::TOKEN_URL).form(&params).send()?;
         println!(
             "[exchange_auth_code] Response status: {}",
             response.status()
