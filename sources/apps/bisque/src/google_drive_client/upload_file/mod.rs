@@ -34,10 +34,7 @@ impl GoogleDriveClient {
                 "Content-Type",
                 format!("multipart/related; boundary={}", boundary),
             )
-            .body({
-                let reader = Reader::from(file, metadata, boundary)?;
-                Body::new(reader)
-            })
+            .body(Body::new(Reader::new(file, metadata, boundary)?))
             .send()?;
 
         println!("[upload_file] Response status: {}", response.status());
