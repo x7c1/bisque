@@ -1,4 +1,4 @@
-use crate::google_drive_client::upload_file::Metadata;
+use crate::google_drive_client::multipart::Metadata;
 use crate::Result;
 use std::fs::File;
 use std::io::{Cursor, Read};

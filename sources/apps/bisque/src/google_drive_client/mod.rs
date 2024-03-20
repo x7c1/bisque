@@ -3,6 +3,9 @@ use crate::oauth_client::AccessToken;
 mod upload_file;
 pub use upload_file::UploadFileParams;
 
+mod multipart;
+pub use multipart::Metadata;
+
 pub struct GoogleDriveClient {
     client: reqwest::blocking::Client,
     access_token: AccessToken,
