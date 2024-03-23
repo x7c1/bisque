@@ -2,15 +2,29 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    EnvVar(std::env::VarError),
     Io(std::io::Error),
     Reqwest(reqwest::Error),
     SerdeJson(serde_json::Error),
+    Env(EnvError),
 }
 
-impl From<std::env::VarError> for Error {
-    fn from(e: std::env::VarError) -> Self {
-        Error::EnvVar(e)
+#[derive(Debug)]
+pub enum EnvError {
+    NotPresent {
+        key: String,
+    },
+    Empty {
+        key: String,
+    },
+    Other {
+        key: String,
+        cause: std::env::VarError,
+    },
+}
+
+impl From<EnvError> for Error {
+    fn from(e: EnvError) -> Self {
+        Error::Env(e)
     }
 }
 

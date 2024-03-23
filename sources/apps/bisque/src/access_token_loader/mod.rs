@@ -1,7 +1,6 @@
 use crate::oauth_client::{AccessToken, AuthCode, OAuthClient, RefreshToken};
-use crate::Result;
-use std::env::VarError;
-use std::{env, io};
+use crate::{envs, Result};
+use std::io;
 
 pub struct AccessTokenLoader {
     oauth_client: OAuthClient,
@@ -39,12 +38,7 @@ impl AccessTokenLoader {
     }
 
     fn find_refresh_token(&self) -> Result<Option<RefreshToken>> {
-        let refresh_token = match env::var("GOOGLE_REFRESH_TOKEN") {
-            Ok(token) if token.is_empty() => None,
-            Ok(token) => Some(RefreshToken::new(token)),
-            Err(VarError::NotPresent) => None,
-            Err(other) => return Err(other.into()),
-        };
-        Ok(refresh_token)
+        let token = envs::find("GOOGLE_REFRESH_TOKEN")?.map(RefreshToken::new);
+        Ok(token)
     }
 }

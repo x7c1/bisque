@@ -10,7 +10,7 @@ pub use refresh_token::RefreshToken;
 mod auth_code;
 pub use auth_code::AuthCode;
 
-use crate::Result;
+use crate::{envs, Result};
 
 /// https://developers.google.com/identity/protocols/oauth2/web-server
 pub struct OAuthClient {
@@ -25,8 +25,8 @@ impl OAuthClient {
     const REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
 
     pub fn setup() -> Result<Self> {
-        let client_id = std::env::var("GOOGLE_CLIENT_ID")?;
-        let client_secret = std::env::var("GOOGLE_CLIENT_SECRET")?;
+        let client_id = envs::require("GOOGLE_CLIENT_ID")?;
+        let client_secret = envs::require("GOOGLE_CLIENT_SECRET")?;
 
         Ok(Self {
             client: reqwest::blocking::Client::new(),
