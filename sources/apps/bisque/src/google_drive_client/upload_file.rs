@@ -19,7 +19,7 @@ impl GoogleDriveClient {
                 "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
                 metadata,
                 file,
-            )
+            )?
             .send()?;
 
         println!("[upload_file] Response status: {}", response.status());

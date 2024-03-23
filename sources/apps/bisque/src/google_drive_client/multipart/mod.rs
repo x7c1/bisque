@@ -5,6 +5,7 @@ mod reader;
 use reader::Reader;
 
 use crate::google_drive_client::GoogleDriveClient;
+use crate::Result;
 use reqwest::blocking::{Body, RequestBuilder};
 use reqwest::IntoUrl;
 use std::fs::File;
@@ -16,21 +17,24 @@ pub struct Metadata {
 }
 
 impl GoogleDriveClient {
-    pub fn post_multipart_related<U: IntoUrl>(
+    pub(crate) fn post_multipart_related<U: IntoUrl>(
         &self,
         url: U,
         metadata: Metadata,
         file: File,
-    ) -> RequestBuilder {
+    ) -> Result<RequestBuilder> {
         let boundary = generate_boundary();
-        let body = Reader::new(file, metadata, &boundary).unwrap();
-        self.client
+        let reader = Reader::new(file, metadata, &boundary)?;
+        let builder = self
+            .client
             .post(url)
             .header("Authorization", format!("Bearer {}", self.access_token))
             .header(
                 "Content-Type",
                 format!("multipart/related; boundary={}", boundary),
             )
-            .body(Body::new(body))
+            .body(Body::new(reader));
+
+        Ok(builder)
     }
 }
