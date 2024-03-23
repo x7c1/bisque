@@ -8,7 +8,7 @@ pub enum Error {
     Env(EnvError),
     Io(Inherited<io::Error>),
     Reqwest(Inherited<reqwest::Error>),
-    SerdeJson(serde_json::Error),
+    SerdeJson(Inherited<serde_json::Error>),
 }
 
 #[derive(Debug)]
@@ -53,6 +53,12 @@ impl From<(reqwest::Error, Location)> for Error {
     }
 }
 
+impl From<(serde_json::Error, Location)> for Error {
+    fn from((cause, location): (serde_json::Error, Location)) -> Self {
+        Error::SerdeJson(Inherited { cause, location })
+    }
+}
+
 #[derive(Debug)]
 pub enum EnvError {
     NotPresent {
@@ -77,10 +83,4 @@ impl From<EnvError> for Error {
 pub struct Inherited<A: Debug> {
     pub cause: A,
     pub location: Location,
-}
-
-impl From<serde_json::Error> for Error {
-    fn from(e: serde_json::Error) -> Self {
-        Error::SerdeJson(e)
-    }
 }
