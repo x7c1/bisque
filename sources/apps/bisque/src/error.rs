@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::io;
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -5,8 +6,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
     Env(EnvError),
-    Io(IoError),
-    Reqwest(ReqwestError),
+    Io(Inherited<io::Error>),
+    Reqwest(Inherited<reqwest::Error>),
     SerdeJson(serde_json::Error),
 }
 
@@ -42,13 +43,13 @@ where
 
 impl From<(io::Error, Location)> for Error {
     fn from((cause, location): (io::Error, Location)) -> Self {
-        Error::Io(IoError { cause, location })
+        Error::Io(Inherited { cause, location })
     }
 }
 
 impl From<(reqwest::Error, Location)> for Error {
     fn from((cause, location): (reqwest::Error, Location)) -> Self {
-        Error::Reqwest(ReqwestError { cause, location })
+        Error::Reqwest(Inherited { cause, location })
     }
 }
 
@@ -73,14 +74,8 @@ impl From<EnvError> for Error {
 }
 
 #[derive(Debug)]
-pub struct IoError {
-    pub cause: io::Error,
-    pub location: Location,
-}
-
-#[derive(Debug)]
-pub struct ReqwestError {
-    pub cause: reqwest::Error,
+pub struct Inherited<A: Debug> {
+    pub cause: A,
     pub location: Location,
 }
 
