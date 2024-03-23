@@ -6,7 +6,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     Env(EnvError),
     Io(IoError),
-    Reqwest(reqwest::Error),
+    Reqwest(ReqwestError),
     SerdeJson(serde_json::Error),
 }
 
@@ -46,6 +46,12 @@ impl From<(io::Error, Location)> for Error {
     }
 }
 
+impl From<(reqwest::Error, Location)> for Error {
+    fn from((cause, location): (reqwest::Error, Location)) -> Self {
+        Error::Reqwest(ReqwestError { cause, location })
+    }
+}
+
 #[derive(Debug)]
 pub enum EnvError {
     NotPresent {
@@ -72,16 +78,10 @@ pub struct IoError {
     pub location: Location,
 }
 
-impl From<IoError> for Error {
-    fn from(e: IoError) -> Self {
-        Error::Io(e)
-    }
-}
-
-impl From<reqwest::Error> for Error {
-    fn from(e: reqwest::Error) -> Self {
-        Error::Reqwest(e)
-    }
+#[derive(Debug)]
+pub struct ReqwestError {
+    pub cause: reqwest::Error,
+    pub location: Location,
 }
 
 impl From<serde_json::Error> for Error {

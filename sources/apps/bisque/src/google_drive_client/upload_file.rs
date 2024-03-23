@@ -21,10 +21,16 @@ impl GoogleDriveClient {
                 metadata,
                 file,
             )?
-            .send()?;
+            .send()
+            .map_err(here!())
+            .inspect(|response| {
+                println!("[upload_file] Response status: {}", response.status());
+            })?;
 
-        println!("[upload_file] Response status: {}", response.status());
-        println!("[upload_file] Response: {}", response.text()?);
+        println!(
+            "[upload_file] Response: {}",
+            response.text().map_err(here!())?
+        );
         Ok(())
     }
 }

@@ -1,5 +1,5 @@
 use crate::oauth_client::{AccessToken, OAuthClient, RefreshToken};
-use crate::Result;
+use crate::{here, Result};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct RefreshAccessTokenResponse {
@@ -17,13 +17,25 @@ impl OAuthClient {
             ("refresh_token", refresh_token.as_str()),
             ("grant_type", "refresh_token"),
         ];
-        let response = self.client.post(Self::TOKEN_URL).form(&params).send()?;
-        println!(
-            "[refresh_access_token] Response status: {}",
-            response.status()
-        );
-        let response = response.json::<RefreshAccessTokenResponse>()?;
-        println!("[refresh_access_token] Response body: {:#?}", response);
+        let response = self
+            .client
+            .post(Self::TOKEN_URL)
+            .form(&params)
+            .send()
+            .map_err(here!())
+            .inspect(|response| {
+                println!(
+                    "[refresh_access_token] Response status: {}",
+                    response.status()
+                );
+            })?;
+
+        let response = response
+            .json::<RefreshAccessTokenResponse>()
+            .map_err(here!())
+            .inspect(|response| {
+                println!("[refresh_access_token] Response body: {:#?}", response);
+            })?;
 
         Ok(response.access_token)
     }

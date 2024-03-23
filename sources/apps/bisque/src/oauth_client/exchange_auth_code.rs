@@ -1,3 +1,4 @@
+use crate::here;
 use crate::oauth_client::{AccessToken, AuthCode, OAuthClient, RefreshToken};
 
 #[derive(Debug, serde::Deserialize)]
@@ -16,13 +17,25 @@ impl OAuthClient {
             ("grant_type", "authorization_code"),
             ("redirect_uri", Self::REDIRECT_URI),
         ];
-        let response = self.client.post(Self::TOKEN_URL).form(&params).send()?;
-        println!(
-            "[exchange_auth_code] Response status: {}",
-            response.status()
-        );
-        let response = response.json::<ExchangeAuthCodeResponse>()?;
-        println!("[exchange_auth_code] Response body: {:#?}", response);
+        let response = self
+            .client
+            .post(Self::TOKEN_URL)
+            .form(&params)
+            .send()
+            .map_err(here!())
+            .inspect(|response| {
+                println!(
+                    "[exchange_auth_code] Response status: {}",
+                    response.status()
+                );
+            })?;
+
+        let response = response
+            .json::<ExchangeAuthCodeResponse>()
+            .map_err(here!())
+            .inspect(|response| {
+                println!("[exchange_auth_code] Response body: {:#?}", response);
+            })?;
 
         Ok(response.refresh_token)
     }
