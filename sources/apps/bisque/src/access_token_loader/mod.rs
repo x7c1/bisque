@@ -1,5 +1,5 @@
 use crate::oauth_client::{AccessToken, AuthCode, OAuthClient, RefreshToken};
-use crate::{envs, Result};
+use crate::{envs, here, Result};
 use std::io;
 
 pub struct AccessTokenLoader {
@@ -22,7 +22,7 @@ impl AccessTokenLoader {
         if let Some(token) = self.find_refresh_token()? {
             return Ok(token);
         }
-        println!("refresh token is empty");
+        println!("Refresh token is empty");
         println!("Go to the following link in your browser:");
         println!("{}", self.oauth_client.get_auth_url());
 
@@ -31,9 +31,11 @@ impl AccessTokenLoader {
 
         self.oauth_client.exchange_auth_code(&auth_code)
     }
+
     fn scan_auth_code(&self) -> Result<AuthCode> {
         let mut auth_code = String::new();
-        io::stdin().read_line(&mut auth_code)?;
+        io::stdin().read_line(&mut auth_code).map_err(here!())?;
+
         Ok(AuthCode::new(auth_code))
     }
 

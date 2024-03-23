@@ -1,11 +1,49 @@
+use std::io;
+
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    Io(std::io::Error),
+    Env(EnvError),
+    Io(IoError),
     Reqwest(reqwest::Error),
     SerdeJson(serde_json::Error),
-    Env(EnvError),
+}
+
+#[derive(Debug)]
+pub struct Location {
+    pub file: &'static str,
+    pub line: u32,
+}
+
+#[macro_export]
+macro_rules! locate {
+    () => {
+        $crate::error::Location {
+            file: file!(),
+            line: line!(),
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! here {
+    () => {
+        $crate::error::attach($crate::locate!())
+    };
+}
+
+pub fn attach<E>(location: Location) -> impl FnOnce(E) -> Error
+where
+    Error: From<(E, Location)>,
+{
+    |cause| (cause, location).into()
+}
+
+impl From<(io::Error, Location)> for Error {
+    fn from((cause, location): (io::Error, Location)) -> Self {
+        Error::Io(IoError { cause, location })
+    }
 }
 
 #[derive(Debug)]
@@ -28,8 +66,14 @@ impl From<EnvError> for Error {
     }
 }
 
-impl From<std::io::Error> for Error {
-    fn from(e: std::io::Error) -> Self {
+#[derive(Debug)]
+pub struct IoError {
+    pub cause: io::Error,
+    pub location: Location,
+}
+
+impl From<IoError> for Error {
+    fn from(e: IoError) -> Self {
         Error::Io(e)
     }
 }

@@ -1,12 +1,13 @@
 use crate::google_drive_client::{GoogleDriveClient, Metadata};
-use crate::Result;
+use crate::{here, Result};
 use std::fs::File;
 
 impl GoogleDriveClient {
     /// https://developers.google.com/drive/api/guides/manage-uploads#http_1
     pub fn upload_file(&self, params: UploadFileParams) -> Result<()> {
-        let file = File::open(&params.src_file_path)?;
-        let file_size = file.metadata()?.len();
+        let file = File::open(&params.src_file_path).map_err(here!())?;
+        let file_size = file.metadata().map_err(here!())?.len();
+
         println!("[upload_file] File size: {}", file_size);
         println!("[upload_file] {:#?}", params);
 
