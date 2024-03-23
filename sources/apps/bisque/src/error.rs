@@ -34,28 +34,35 @@ macro_rules! here {
     };
 }
 
+#[derive(Debug)]
+pub struct Inherited<A: Debug> {
+    pub cause: A,
+    pub location: Location,
+}
+
 pub fn attach<E>(location: Location) -> impl FnOnce(E) -> Error
 where
-    Error: From<(E, Location)>,
+    Inherited<E>: Into<Error>,
+    E: Debug,
 {
-    |cause| (cause, location).into()
+    |cause| Inherited { cause, location }.into()
 }
 
-impl From<(io::Error, Location)> for Error {
-    fn from((cause, location): (io::Error, Location)) -> Self {
-        Error::Io(Inherited { cause, location })
+impl From<Inherited<io::Error>> for Error {
+    fn from(inherited: Inherited<io::Error>) -> Self {
+        Error::Io(inherited)
     }
 }
 
-impl From<(reqwest::Error, Location)> for Error {
-    fn from((cause, location): (reqwest::Error, Location)) -> Self {
-        Error::Reqwest(Inherited { cause, location })
+impl From<Inherited<reqwest::Error>> for Error {
+    fn from(inherited: Inherited<reqwest::Error>) -> Self {
+        Error::Reqwest(inherited)
     }
 }
 
-impl From<(serde_json::Error, Location)> for Error {
-    fn from((cause, location): (serde_json::Error, Location)) -> Self {
-        Error::SerdeJson(Inherited { cause, location })
+impl From<Inherited<serde_json::Error>> for Error {
+    fn from(inherited: Inherited<serde_json::Error>) -> Self {
+        Error::SerdeJson(inherited)
     }
 }
 
@@ -77,10 +84,4 @@ impl From<EnvError> for Error {
     fn from(e: EnvError) -> Self {
         Error::Env(e)
     }
-}
-
-#[derive(Debug)]
-pub struct Inherited<A: Debug> {
-    pub cause: A,
-    pub location: Location,
 }
