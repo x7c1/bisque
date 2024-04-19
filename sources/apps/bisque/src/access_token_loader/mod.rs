@@ -4,7 +4,6 @@ use crate::oauth_client::{
 };
 use crate::{envs, here, Result};
 use std::io;
-use std::process::exit;
 use RefreshAccessTokenResponse::Success;
 
 pub struct AccessTokenLoader {
