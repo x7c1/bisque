@@ -9,6 +9,7 @@ pub enum Error {
     Io(Inherited<io::Error>),
     Reqwest(Inherited<reqwest::Error>),
     SerdeJson(Inherited<serde_json::Error>),
+    RefreshAccessToken,
 }
 
 #[derive(Debug)]
