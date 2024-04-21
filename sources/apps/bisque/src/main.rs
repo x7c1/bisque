@@ -25,7 +25,7 @@ fn to_code(result: Result<()>) -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(cause) => {
-            println!("[bisque] failed: {cause:?}");
+            println!("[bisque] failed: {cause:#?}");
             ExitCode::FAILURE
         }
     }

@@ -1,6 +1,5 @@
 use crate::google_drive_client::multipart::Metadata;
 use crate::{here, Result};
-use std::fs::File;
 use std::io::{Cursor, Read};
 
 pub struct Reader<A> {
@@ -8,7 +7,7 @@ pub struct Reader<A> {
 }
 
 impl Reader<()> {
-    pub fn new(file: File, metadata: Metadata, boundary: &str) -> Result<Reader<impl Read>> {
+    pub fn new(file: impl Read, metadata: Metadata, boundary: &str) -> Result<Reader<impl Read>> {
         let boundary = Cursor::new(format!("--{boundary}"));
         let metadata = Cursor::new(serde_json::to_string(&metadata).map_err(here!())?);
         let chain = boundary
