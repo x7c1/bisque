@@ -19,7 +19,7 @@ impl GoogleDriveClient {
         let url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
         let encryptor = Encryptor::new(
             file,
-            &EncryptionKey::from_file(params.key_file_path).map_err(here!())?,
+            &EncryptionKey::from_file(&params.key_file_path).map_err(here!())?,
         );
         let response = self
             .post_multipart_related(url, metadata, encryptor)?
