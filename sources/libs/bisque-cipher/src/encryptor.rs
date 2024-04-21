@@ -28,16 +28,15 @@ impl<R: Read> Read for Encryptor<R> {
         if bytes_read == 0 {
             return Ok(0); // End of inner stream
         }
-        let mut encrypted_chunk = inner_buffer.to_vec();
+        let mut chunk = inner_buffer.to_vec();
         let mut position = 0;
-        while position < encrypted_chunk.len() {
-            let block =
-                GenericArray::from_mut_slice(&mut encrypted_chunk[position..position + BLOCK_SIZE]);
+        while position < chunk.len() {
+            let block = GenericArray::from_mut_slice(&mut chunk[position..position + BLOCK_SIZE]);
             self.cipher.encrypt_block(block);
             position += BLOCK_SIZE;
         }
-        let to_copy = std::cmp::min(buf.len(), encrypted_chunk.len());
-        buf[..to_copy].copy_from_slice(&encrypted_chunk[..to_copy]);
+        let to_copy = std::cmp::min(buf.len(), chunk.len());
+        buf[..to_copy].copy_from_slice(&chunk[..to_copy]);
 
         Ok(to_copy)
     }

@@ -1,6 +1,3 @@
-mod encryptor;
-use encryptor::Encryptor;
-
 mod generate_boundary;
 use generate_boundary::generate_boundary;
 
@@ -9,11 +6,10 @@ use reader::Reader;
 
 use crate::google_drive_client::GoogleDriveClient;
 use crate::Result;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use bisque_cipher::{generate_key, Encryptor};
 use reqwest::blocking::{Body, RequestBuilder};
 use reqwest::IntoUrl;
-use std::fs::File;
+use std::io::Read;
 
 #[derive(Debug, serde::Serialize)]
 pub struct Metadata {
@@ -26,10 +22,10 @@ impl GoogleDriveClient {
         &self,
         url: U,
         metadata: Metadata,
-        file: File,
+        read: impl Read + Send + 'static,
     ) -> Result<RequestBuilder> {
         let boundary = generate_boundary();
-        let encryptor = Encryptor::new(file, generate_key());
+        let encryptor = Encryptor::new(read, generate_key());
         let reader = Reader::new(encryptor, metadata, &boundary)?;
         let builder = self
             .client
@@ -43,13 +39,4 @@ impl GoogleDriveClient {
 
         Ok(builder)
     }
-}
-
-fn generate_key() -> [u8; 16] {
-    let mut seed: [u8; 32] = [0; 32];
-    let mut rng = StdRng::from_entropy();
-    rng.fill(&mut seed);
-    let mut key = [0; 16];
-    key.copy_from_slice(&seed[..16]);
-    key
 }
