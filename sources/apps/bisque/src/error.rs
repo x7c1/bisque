@@ -5,13 +5,15 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
+    KeyFileAlreadyExists { path: String },
+    RefreshAccessToken,
+
+    // inherited errors
+    Cypher(Inherited<bisque_cipher::Error>),
     Env(EnvError),
     Io(Inherited<io::Error>),
     Reqwest(Inherited<reqwest::Error>),
     SerdeJson(Inherited<serde_json::Error>),
-
-    KeyFileAlreadyExists { path: String },
-    RefreshAccessToken,
 }
 
 #[derive(Debug)]
@@ -49,6 +51,12 @@ where
     E: Debug,
 {
     |cause| Inherited { cause, location }.into()
+}
+
+impl From<Inherited<bisque_cipher::Error>> for Error {
+    fn from(inherited: Inherited<bisque_cipher::Error>) -> Self {
+        Error::Cypher(inherited)
+    }
 }
 
 impl From<Inherited<io::Error>> for Error {
