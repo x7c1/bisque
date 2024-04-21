@@ -6,7 +6,6 @@ use reader::Reader;
 
 use crate::google_drive_client::GoogleDriveClient;
 use crate::Result;
-use bisque_cipher::{generate_key, Encryptor};
 use reqwest::blocking::{Body, RequestBuilder};
 use reqwest::IntoUrl;
 use std::io::Read;
@@ -25,8 +24,7 @@ impl GoogleDriveClient {
         read: impl Read + Send + 'static,
     ) -> Result<RequestBuilder> {
         let boundary = generate_boundary();
-        let encryptor = Encryptor::new(read, generate_key());
-        let reader = Reader::new(encryptor, metadata, &boundary)?;
+        let reader = Reader::new(read, metadata, &boundary)?;
         let builder = self
             .client
             .post(url)
