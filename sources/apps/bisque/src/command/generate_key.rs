@@ -1,6 +1,6 @@
 use crate::error::Error::KeyFileAlreadyExists;
 use crate::{here, Result};
-use bisque_cipher::generate_key;
+use bisque_cipher::EncryptionKey;
 use clap::Parser;
 use std::fs;
 use std::fs::File;
@@ -18,10 +18,9 @@ pub fn run(args: Args) -> Result<()> {
     if file_exists {
         return Err(KeyFileAlreadyExists { path: file_path });
     }
-    let key = generate_key();
+    let key = EncryptionKey::generate();
     let mut file = File::create(file_path).map_err(here!())?;
-    file.write_all(&key).map_err(here!())?;
-    println!("key: {key:?}");
+    file.write_all(key.as_array()).map_err(here!())?;
 
     Ok(())
 }

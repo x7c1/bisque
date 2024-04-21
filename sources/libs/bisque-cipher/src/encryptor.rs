@@ -1,6 +1,7 @@
+use crate::EncryptionKey;
 use aes::cipher::generic_array::GenericArray;
 use aes::cipher::{BlockEncrypt, KeyInit};
-use aes::Aes128;
+use aes::Aes256;
 use std::io;
 use std::io::Read;
 
@@ -8,15 +9,14 @@ const BLOCK_SIZE: usize = 16;
 
 pub struct Encryptor<R> {
     inner: R,
-    cipher: Aes128,
+    cipher: Aes256,
 }
 
 impl<R: Read> Encryptor<R> {
-    pub fn new(reader: R, key: [u8; 16]) -> Self {
-        let cipher = Aes128::new(GenericArray::from_slice(&key));
+    pub fn new(reader: R, key: &EncryptionKey) -> Self {
         Encryptor {
             inner: reader,
-            cipher,
+            cipher: Aes256::new(key.as_array()),
         }
     }
 }
