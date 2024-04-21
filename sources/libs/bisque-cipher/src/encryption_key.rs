@@ -1,3 +1,4 @@
+use crate::Error::{CannotReadKeyFile, WrongSizeKeyFile};
 use crate::Result;
 use aes::cipher::consts::U32;
 use aes::cipher::generic_array::GenericArray;
@@ -18,9 +19,16 @@ impl EncryptionKey {
     }
 
     pub fn from_file(path: String) -> Result<Self> {
-        let bytes = fs::read(path).unwrap();
+        let bytes = fs::read(&path).map_err(|cause| CannotReadKeyFile {
+            path: path.clone(),
+            cause,
+        })?;
         if bytes.len() != Self::SIZE {
-            todo!()
+            return Err(WrongSizeKeyFile {
+                path,
+                expected: Self::SIZE,
+                actual: bytes.len(),
+            });
         }
         let mut array = [0; Self::SIZE];
         array.copy_from_slice(&bytes);
