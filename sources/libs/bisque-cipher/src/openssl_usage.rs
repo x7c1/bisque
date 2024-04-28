@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::Path;
 
+#[allow(dead_code)]
 pub fn encrypt_file(
     input_file: impl AsRef<Path>,
     output_file: impl AsRef<Path>,
@@ -12,6 +13,7 @@ pub fn encrypt_file(
     run(Mode::Encrypt, input_file, output_file, key, iv)
 }
 
+#[allow(dead_code)]
 pub fn decrypt_file(
     input_file: impl AsRef<Path>,
     output_file: impl AsRef<Path>,

@@ -3,9 +3,6 @@ use crate::Result;
 use openssl::symm::{Cipher, Crypter, Mode};
 use std::io;
 use std::io::{Read, Write};
-use std::process::exit;
-
-const BLOCK_SIZE: usize = 16;
 
 pub struct Encryptor<R> {
     inner: R,
