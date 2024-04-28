@@ -46,7 +46,7 @@ impl<R: Read> Read for Encryptor<R> {
             self.buffer = remaining.to_vec();
             return Ok(moved);
         }
-        let mut cache = vec![0; 4192];
+        let mut cache = vec![0; 4096];
         let loaded = self.inner.read(&mut cache)?;
 
         let mut output = vec![0; loaded + self.block_size];
