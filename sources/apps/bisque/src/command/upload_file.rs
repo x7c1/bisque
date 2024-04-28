@@ -25,6 +25,5 @@ pub fn run(args: Args) -> Result<()> {
         dst_name: file_path.split('/').last().unwrap_or("").to_string(),
         dst_folder_id: args.folder_id,
     })?;
-
     Ok(())
 }
