@@ -48,7 +48,7 @@ impl<R: Read> Read for Encryptor<R> {
             self.crypter.update(input, &mut output)?
         };
         if written == 0 {
-            self.finalize(&mut buf)
+            self.finalize(buf)
         } else {
             buf.write_all(&output[..written])?;
             Ok(written)
