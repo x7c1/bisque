@@ -80,4 +80,35 @@ mod tests {
         let actual_bytes = fs::read(encrypted_file).unwrap();
         assert_eq!(expected_bytes, actual_bytes);
     }
+
+    #[rstest]
+    fn test_uneven_read_call() {
+        let input_file = "./samples/input_image.png";
+        let output_file = "./samples/test3_1_encrypted_output.png";
+        let expected_file = "./samples/test3_1_expected_output.png";
+
+        let key = b"01234567890123456789012345678901";
+        let iv = b"0123456789012345";
+        let mut encryptor = Encryptor::new(File::open(input_file).unwrap(), key, iv).unwrap();
+
+        // Encryptor::read() was called with these byte counts
+        // by reqwest post() although the reason was unclear.
+        let uneven_bytes = &[
+            7883, 11, //
+            8192, 8187, 8192, 8187, 11, //
+            8192, 8187, 8192, 8187, 11, //
+            8192, 8187, 8192, 8187, 11, //
+            8192, 8187, 6955, 6939,
+        ];
+        let mut file = File::create(output_file).unwrap();
+        for bytes in uneven_bytes {
+            let mut buffer = vec![0; *bytes];
+            let loaded = encryptor.read(&mut buffer).unwrap();
+            let _written = file.write(&buffer[..loaded]).unwrap();
+        }
+        openssl_usage::encrypt_file(input_file, expected_file, key, iv).unwrap();
+        let expected_bytes = fs::read(expected_file).unwrap();
+        let actual_bytes = fs::read(output_file).unwrap();
+        assert_eq!(expected_bytes, actual_bytes);
+    }
 }
