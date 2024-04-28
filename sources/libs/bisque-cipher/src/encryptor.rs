@@ -33,16 +33,16 @@ impl<R: Read> Encryptor<R> {
         }
         let mut output = vec![0; self.block_size];
         let written = self.crypter.finalize(&mut output)?;
-        buf.write(&output[..written])?;
+        buf.write_all(&output[..written])?;
         self.finalized = true;
         Ok(written)
     }
 }
 
 impl<R: Read> Read for Encryptor<R> {
-    fn read(&mut self, mut buf: &mut [u8]) -> io::Result<usize> {
-        if self.buffer.len() > 0 {
-            let (moved, remaining) = move_buffer(&mut buf, &self.buffer)?;
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if !self.buffer.is_empty() {
+            let (moved, remaining) = move_buffer(buf, &self.buffer)?;
             self.buffer = remaining.to_vec();
             return Ok(moved);
         }
@@ -57,16 +57,16 @@ impl<R: Read> Read for Encryptor<R> {
         if updated == 0 {
             self.finalize(buf)
         } else {
-            let (moved, remaining) = move_buffer(&mut buf, &output[..updated])?;
+            let (moved, remaining) = move_buffer(buf, &output[..updated])?;
             self.buffer = remaining.to_vec();
             Ok(moved)
         }
     }
 }
 
-fn move_buffer(mut dst: &mut [u8], src: &[u8]) -> io::Result<(usize, Vec<u8>)> {
+fn move_buffer<'a>(mut dst: &'a mut [u8], src: &'a [u8]) -> io::Result<(usize, &'a [u8])> {
     let buffer_loaded = dst.len().min(src.len());
     let (bytes, remaining) = src.split_at(buffer_loaded);
-    dst.write(bytes)?;
-    Ok((buffer_loaded, remaining.to_vec()))
+    dst.write_all(bytes)?;
+    Ok((buffer_loaded, remaining))
 }
