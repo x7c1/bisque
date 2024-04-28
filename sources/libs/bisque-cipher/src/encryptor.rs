@@ -65,8 +65,8 @@ impl<R: Read> Read for Encryptor<R> {
 }
 
 fn move_buffer<'a>(mut dst: &'a mut [u8], src: &'a [u8]) -> io::Result<(usize, &'a [u8])> {
-    let buffer_loaded = dst.len().min(src.len());
-    let (bytes, remaining) = src.split_at(buffer_loaded);
+    let moved = dst.len().min(src.len());
+    let (bytes, remaining) = src.split_at(moved);
     dst.write_all(bytes)?;
-    Ok((buffer_loaded, remaining))
+    Ok((moved, remaining))
 }
