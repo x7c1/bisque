@@ -15,7 +15,7 @@ fn main() -> ExitCode {
     let result = match args.subcommand {
         Subcommand::UploadFile(args) => command::upload_file::run(args),
         Subcommand::GenerateKey(args) => command::generate_key::run(args),
-        Subcommand::DownloadFile(args) => command::download_file::run(args)
+        Subcommand::DownloadFile(args) => command::download_file::run(args),
     };
     to_code(result)
 }
