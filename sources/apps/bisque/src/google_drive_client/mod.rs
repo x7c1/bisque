@@ -1,3 +1,6 @@
+mod download_file;
+pub use download_file::DownloadFileParams;
+
 mod upload_file;
 pub use upload_file::UploadFileParams;
 

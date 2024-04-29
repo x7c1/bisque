@@ -13,6 +13,7 @@ pub enum Error {
     Io(Inherited<io::Error>),
     Reqwest(Inherited<reqwest::Error>),
     SerdeJson(Inherited<serde_json::Error>),
+    ParseUrl(Inherited<url::ParseError>),
 }
 
 #[derive(Debug)]
@@ -73,6 +74,12 @@ impl From<Inherited<reqwest::Error>> for Error {
 impl From<Inherited<serde_json::Error>> for Error {
     fn from(inherited: Inherited<serde_json::Error>) -> Self {
         Error::SerdeJson(inherited)
+    }
+}
+
+impl From<Inherited<url::ParseError>> for Error {
+    fn from(inherited: Inherited<url::ParseError>) -> Self {
+        Error::ParseUrl(inherited)
     }
 }
 
