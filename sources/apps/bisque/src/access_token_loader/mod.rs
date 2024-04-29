@@ -16,9 +16,9 @@ pub struct AccessTokenLoader {
 }
 
 impl AccessTokenLoader {
-    pub fn setup(cache_path: impl Into<PathBuf>) -> Result<Self> {
+    pub fn setup(session_path: impl Into<PathBuf>) -> Result<Self> {
         let oauth_client = OAuthClient::setup()?;
-        let store = SessionStore::new(cache_path);
+        let store = SessionStore::new(session_path);
         Ok(Self {
             oauth_client,
             session_store: store,

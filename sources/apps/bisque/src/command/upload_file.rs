@@ -7,16 +7,19 @@ use clap::Parser;
 pub struct Args {
     #[clap(long)]
     key_file: String,
+
     #[clap(long)]
     target_file: String,
+
     #[clap(long)]
     folder_id: String,
+
     #[clap(long)]
-    cache_file: String,
+    session_file: String,
 }
 
 pub fn run(args: Args) -> Result<()> {
-    let access_token_loader = AccessTokenLoader::setup(args.cache_file)?;
+    let access_token_loader = AccessTokenLoader::setup(args.session_file)?;
     let access_token = access_token_loader.load()?;
 
     let drive_client = GoogleDriveClient::new(access_token)?;
