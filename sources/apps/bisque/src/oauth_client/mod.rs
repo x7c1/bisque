@@ -4,7 +4,7 @@ pub use access_token::AccessToken;
 mod exchange_auth_code;
 
 mod refresh_access_token;
-pub use refresh_access_token::RefreshAccessTokenResponse;
+pub use refresh_access_token::{RefreshAccessTokenResponse, RefreshAccessTokenSuccessResponse};
 
 mod refresh_token;
 pub use refresh_token::RefreshToken;

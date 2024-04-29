@@ -33,7 +33,7 @@ mod tests {
         "./samples/test1_3_encrypted_output2.cbc.tmp",
         "./samples/test1_3_decrypted_output2.png.tmp"
     )]
-    fn test_crypter_of_openssl(input_file: &str, encrypted_file: &str, decrypted_file: &str) {
+    fn test1_crypter_of_openssl(input_file: &str, encrypted_file: &str, decrypted_file: &str) {
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
         openssl_usage::encrypt_file(input_file, encrypted_file, key, iv).unwrap();
@@ -62,10 +62,10 @@ mod tests {
     )]
     #[case::image(
         "./samples/input_image.png",
-        "./samples/test2_3_encrypted_output2.cbc.tmp",
-        "./samples/test2_3_expected_output2.png.tmp"
+        "./samples/test2_3_encrypted_output1.cbc.tmp",
+        "./samples/test2_3_expected_output1.png.tmp"
     )]
-    fn test_encryptor(input_file: &str, encrypted_file: &str, expected_file: &str) {
+    fn test2_encryptor(input_file: &str, encrypted_file: &str, expected_file: &str) {
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
         let mut encryptor = Encryptor::new(File::open(input_file).unwrap(), key, iv).unwrap();
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_uneven_read_call() {
+    fn test3_uneven_read_call() {
         let input_file = "./samples/input_image.png";
         let output_file = "./samples/test3_1_encrypted_output.png";
         let expected_file = "./samples/test3_1_expected_output.png";

@@ -28,7 +28,10 @@ impl GoogleDriveClient {
         let builder = self
             .client
             .post(url)
-            .header("Authorization", format!("Bearer {}", self.access_token))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.access_token.reveal()),
+            )
             .header(
                 "Content-Type",
                 format!("multipart/related; boundary={}", boundary),

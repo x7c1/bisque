@@ -4,15 +4,18 @@ use crate::{here, Result};
 #[derive(Debug, serde::Deserialize)]
 #[serde(untagged)]
 pub enum RefreshAccessTokenResponse {
-    Success {
-        access_token: AccessToken,
-        expires_in: u32,
-        scope: String,
-    },
+    Success(RefreshAccessTokenSuccessResponse),
     BadRequest {
         error: String,
         error_description: String,
     },
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct RefreshAccessTokenSuccessResponse {
+    pub access_token: AccessToken,
+    pub expires_in: u32,
+    pub scope: String,
 }
 
 impl OAuthClient {

@@ -16,6 +16,7 @@ impl GoogleDriveClient {
             name: params.dst_name,
             parents: vec![params.dst_folder_id],
         };
+        // TODO
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
         let encryptor = Encryptor::new(file, key, iv).unwrap();
