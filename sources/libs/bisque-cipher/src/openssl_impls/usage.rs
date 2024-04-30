@@ -55,3 +55,37 @@ fn run(
     output_file.set_len(total_bytes_written as u64)?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::openssl_impls::usage;
+    use rstest::rstest;
+    use std::fs;
+
+    #[rstest(input_file, encrypted_file, decrypted_file)]
+    #[case::small_text(
+        "./samples/decrypted/text_smaller_than_block_size.txt",
+        "./samples/encrypted.output/test1_1.cbc",
+        "./samples/decrypted.output/test1_1.txt"
+    )]
+    #[case::large_text(
+        "./samples/decrypted/text_larger_than_block_size.txt",
+        "./samples/encrypted.output/test1_2.cbc",
+        "./samples/decrypted.output/test1_2.txt"
+    )]
+    #[case::image(
+        "./samples/decrypted/image.png",
+        "./samples/encrypted.output/test1_3.cbc",
+        "./samples/decrypted.output/test1_3.png"
+    )]
+    fn test1_crypter_of_openssl(input_file: &str, encrypted_file: &str, decrypted_file: &str) {
+        let key = b"01234567890123456789012345678901";
+        let iv = b"0123456789012345";
+        usage::encrypt_file(input_file, encrypted_file, key, iv).unwrap();
+        usage::decrypt_file(encrypted_file, decrypted_file, key, iv).unwrap();
+
+        let expected_bytes = fs::read(input_file).unwrap();
+        let actual_bytes = fs::read(decrypted_file).unwrap();
+        assert_eq!(expected_bytes, actual_bytes);
+    }
+}

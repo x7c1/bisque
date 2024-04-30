@@ -38,24 +38,24 @@ mod tests {
 
     #[rstest(input_file, decrypted_file, expected_file)]
     #[case::empty_text(
-        "./samples/input_encrypted_empty.cbc",
-        "./samples/test4_0_decrypted_output1.txt.tmp",
-        "./samples/input_empty.txt"
+        "./samples/encrypted/empty.cbc",
+        "./samples/decrypted.output/test4_0.txt",
+        "./samples/decrypted/empty.txt"
     )]
     #[case::small_text(
-        "./samples/input_encrypted_smaller_than_block_size.cbc",
-        "./samples/test4_1_decrypted_output1.txt.tmp",
-        "./samples/input_smaller_than_block_size.txt"
+        "./samples/encrypted/text_smaller_than_block_size.cbc",
+        "./samples/decrypted.output/test4_1.txt",
+        "./samples/decrypted/text_smaller_than_block_size.txt"
     )]
     #[case::large_text(
-        "./samples/input_encrypted_larger_than_block_size.cbc",
-        "./samples/test4_2_decrypted_output1.cbc.tmp",
-        "./samples/input_larger_than_block_size.txt"
+        "./samples/encrypted/text_larger_than_block_size.cbc",
+        "./samples/decrypted.output/test4_2.txt",
+        "./samples/decrypted/text_larger_than_block_size.txt"
     )]
     #[case::image(
-        "./samples/input_encrypted_image.cbc",
-        "./samples/test4_3_decrypted_output1.png.tmp",
-        "./samples/input_image.png"
+        "./samples/encrypted/image.cbc",
+        "./samples/decrypted.output/test4_3.png",
+        "./samples/decrypted/image.png"
     )]
     fn test4_decrypter(input_file: &str, decrypted_file: &str, expected_file: &str) {
         let key = b"01234567890123456789012345678901";

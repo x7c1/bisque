@@ -31,7 +31,6 @@ impl<R: Read> Read for Encrypter<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::openssl_usage;
     use rstest::rstest;
     use std::fs;
     use std::fs::File;
@@ -39,24 +38,24 @@ mod tests {
 
     #[rstest(input_file, encrypted_file, expected_file)]
     #[case::empty_text(
-        "./samples/input_empty.txt",
-        "./samples/test2_0_encrypted_output1.cbc.tmp",
-        "./samples/test2_0_expected_output1.cbc.tmp"
+        "./samples/decrypted/empty.txt",
+        "./samples/encrypted.output/test2_0.cbc",
+        "./samples/encrypted/empty.cbc"
     )]
     #[case::small_text(
-        "./samples/input_smaller_than_block_size.txt",
-        "./samples/test2_1_encrypted_output1.cbc.tmp",
-        "./samples/test2_1_expected_output1.cbc.tmp"
+        "./samples/decrypted/text_smaller_than_block_size.txt",
+        "./samples/encrypted.output/test2_1.cbc",
+        "./samples/encrypted/text_smaller_than_block_size.cbc"
     )]
     #[case::large_text(
-        "./samples/input_larger_than_block_size.txt",
-        "./samples/test2_2_encrypted_output1.cbc.tmp",
-        "./samples/test2_2_expected_output1.cbc.tmp"
+        "./samples/decrypted/text_larger_than_block_size.txt",
+        "./samples/encrypted.output/test2_2.cbc",
+        "./samples/encrypted/text_larger_than_block_size.cbc"
     )]
     #[case::image(
-        "./samples/input_image.png",
-        "./samples/test2_3_encrypted_output1.cbc.tmp",
-        "./samples/test2_3_expected_output1.png.tmp"
+        "./samples/decrypted/image.png",
+        "./samples/encrypted.output/test2_3.cbc",
+        "./samples/encrypted/image.cbc"
     )]
     fn test2_encrypter(input_file: &str, encrypted_file: &str, expected_file: &str) {
         let key = b"01234567890123456789012345678901";
@@ -68,7 +67,6 @@ mod tests {
         let _len = encrypter.read_to_end(&mut bytes).unwrap();
         file.write_all(&bytes).unwrap();
 
-        openssl_usage::encrypt_file(input_file, expected_file, key, iv).unwrap();
         let expected_bytes = fs::read(expected_file).unwrap();
         let actual_bytes = fs::read(encrypted_file).unwrap();
         assert_eq!(expected_bytes, actual_bytes);
@@ -76,9 +74,9 @@ mod tests {
 
     #[rstest]
     fn test3_uneven_read_call() {
-        let input_file = "./samples/input_image.png";
-        let output_file = "./samples/test3_1_encrypted_output.png.tmp";
-        let expected_file = "./samples/test3_1_expected_output.png.tmp";
+        let input_file = "./samples/decrypted/image.png";
+        let output_file = "./samples/encrypted.output/test3_1.cbc";
+        let expected_file = "./samples/encrypted/image.cbc";
 
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
@@ -99,7 +97,6 @@ mod tests {
             let loaded = encrypter.read(&mut buffer).unwrap();
             let _written = file.write(&buffer[..loaded]).unwrap();
         }
-        openssl_usage::encrypt_file(input_file, expected_file, key, iv).unwrap();
         let expected_bytes = fs::read(expected_file).unwrap();
         let actual_bytes = fs::read(output_file).unwrap();
         assert_eq!(expected_bytes, actual_bytes);
