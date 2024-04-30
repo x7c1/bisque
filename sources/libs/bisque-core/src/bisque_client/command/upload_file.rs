@@ -16,30 +16,26 @@ pub struct Params {
 
 impl BisqueClient {
     pub fn upload_file(&self, params: Params) -> Result<()> {
+        println!("[upload_file] {:#?}", params);
+
         let file = File::open(&params.src_file_path).map_err(here!())?;
         let file_size = file.metadata().map_err(here!())?.len();
-
         println!("[upload_file] File size: {}", file_size);
-        println!("[upload_file] {:#?}", params);
 
         let metadata = Metadata {
             name: params.dst_name,
             parents: vec![params.dst_folder_id],
         };
-        let key = RandomBytes::restore_from_file(&params.key_file_path)
-            .map_err(here!())?
-            .into_key();
+        let reader = {
+            let key = RandomBytes::restore_from_file(&params.key_file_path)
+                .map_err(here!())?
+                .into_key();
 
-        let iv = RandomBytes::generate().into_iv();
-        let encrypter = Encrypter::new(file, &key, &iv).map_err(here!())?;
-
-        self.drive_client
-            .upload_file(upload_file::Request {
-                metadata,
-                reader: encrypter,
-            })
-            .map_err(here!())?;
-
+            let iv = RandomBytes::generate().into_iv();
+            Encrypter::new(file, &key, &iv).map_err(here!())?
+        };
+        let request = upload_file::Request { metadata, reader };
+        self.drive_client.upload_file(request).map_err(here!())?;
         Ok(())
     }
 }

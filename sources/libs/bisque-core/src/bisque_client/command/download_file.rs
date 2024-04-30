@@ -18,7 +18,7 @@ pub struct Params {
 
 impl BisqueClient {
     pub fn download_file(&self, params: Params) -> Result<()> {
-        println!("{:#?}", params);
+        println!("[download_file] {:#?}", params);
 
         let request = list_files::Request {
             folder_id: params.src_folder_id.clone(),
