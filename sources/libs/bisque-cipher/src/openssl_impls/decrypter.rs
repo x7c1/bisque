@@ -78,7 +78,6 @@ fn move_buffer<'a>(mut dst: &'a mut [u8], src: &'a [u8]) -> io::Result<(usize, &
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::openssl_usage;
     use rstest::rstest;
     use std::fs;
     use std::fs::File;
