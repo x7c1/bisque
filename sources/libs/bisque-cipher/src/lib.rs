@@ -1,5 +1,7 @@
 mod openssl_usage;
 
+mod decryptor;
+
 mod encryption_key;
 pub use encryption_key::EncryptionKey;
 

@@ -85,7 +85,7 @@ mod tests {
     use std::io::{Read, Write};
 
     #[rstest(input_file, encrypted_file, expected_file)]
-    #[case::small_text(
+    #[case::empty_text(
         "./samples/input_empty.txt",
         "./samples/test2_0_encrypted_output1.cbc.tmp",
         "./samples/test2_0_expected_output1.cbc.tmp"
@@ -124,8 +124,8 @@ mod tests {
     #[rstest]
     fn test3_uneven_read_call() {
         let input_file = "./samples/input_image.png";
-        let output_file = "./samples/test3_1_encrypted_output.png";
-        let expected_file = "./samples/test3_1_expected_output.png";
+        let output_file = "./samples/test3_1_encrypted_output.png.tmp";
+        let expected_file = "./samples/test3_1_expected_output.png.tmp";
 
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";

@@ -8,6 +8,9 @@ pub enum Error {
     CannotCreateEncryptor {
         cause: ErrorStack,
     },
+    CannotCreateDecryptor {
+        cause: ErrorStack,
+    },
     KeyFileAlreadyExists {
         path: String,
     },
