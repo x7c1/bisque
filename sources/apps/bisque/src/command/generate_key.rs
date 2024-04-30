@@ -1,5 +1,5 @@
 use crate::{here, Result};
-use bisque_cipher::EncryptionKey;
+use bisque_cipher::RandomBytes;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -9,7 +9,7 @@ pub struct Args {
 }
 
 pub fn run(args: Args) -> Result<()> {
-    let key = EncryptionKey::generate();
+    let key = RandomBytes::generate();
     key.write_to_file(&args.file_path).map_err(here!())?;
     Ok(())
 }

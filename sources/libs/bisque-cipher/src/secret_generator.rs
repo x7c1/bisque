@@ -4,19 +4,19 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use std::fs;
 
-pub struct EncryptionKey([u8; Self::SIZE]);
+pub struct RandomBytes([u8; Self::SIZE]);
 
-impl EncryptionKey {
+impl RandomBytes {
     const SIZE: usize = 32;
 
-    pub fn generate() -> EncryptionKey {
+    pub fn generate() -> RandomBytes {
         let seed = Self::generate_seed();
         let mut key = [0; Self::SIZE];
         key.copy_from_slice(&seed[..Self::SIZE]);
-        EncryptionKey(key)
+        RandomBytes(key)
     }
 
-    pub fn from_file(path: &str) -> Result<Self> {
+    pub fn restore_from_file(path: &str) -> Result<Self> {
         let bytes = fs::read(path).map_err(|cause| CannotReadKeyFile {
             path: path.to_string(),
             cause,
@@ -30,7 +30,7 @@ impl EncryptionKey {
         }
         let mut array = [0; Self::SIZE];
         array.copy_from_slice(&bytes);
-        Ok(EncryptionKey(array))
+        Ok(RandomBytes(array))
     }
 
     pub fn write_to_file(&self, path: &str) -> Result<()> {

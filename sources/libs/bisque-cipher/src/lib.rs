@@ -1,8 +1,8 @@
 mod openssl_impls;
 pub use openssl_impls::{Decrypter, Encrypter};
 
-mod encryption_key;
-pub use encryption_key::EncryptionKey;
+mod secret_generator;
+pub use secret_generator::RandomBytes;
 
 mod error;
 pub use error::{Error, Result};
