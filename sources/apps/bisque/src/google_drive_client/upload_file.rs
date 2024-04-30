@@ -16,10 +16,10 @@ impl GoogleDriveClient {
             name: params.dst_name,
             parents: vec![params.dst_folder_id],
         };
-        // TODO
+        // TODO: use secret key
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
-        let encrypter = Encrypter::new(file, key, iv).unwrap();
+        let encrypter = Encrypter::new(file, key, iv).map_err(here!())?;
 
         let url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
         let response = self

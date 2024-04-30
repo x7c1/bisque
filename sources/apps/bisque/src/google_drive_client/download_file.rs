@@ -1,5 +1,6 @@
 use crate::google_drive_client::GoogleDriveClient;
 use crate::{here, Result};
+use bisque_cipher::Decrypter;
 use reqwest::Url;
 use std::io::{Read, Write};
 use std::path::PathBuf;
@@ -49,9 +50,12 @@ impl GoogleDriveClient {
         let response = self.get_file(GetFileRequest {
             file_id: found.id.clone(),
         })?;
-        let mut file = std::fs::File::create(&params.dst_file_path).map_err(here!())?;
-        let mut reader = response.inner;
+        // TODO: use secret key
+        let key = b"01234567890123456789012345678901";
+        let iv = b"0123456789012345";
+        let mut reader = Decrypter::new(response.inner, key, iv).map_err(here!())?;
         let mut buffer = vec![0; 4096];
+        let mut file = std::fs::File::create(&params.dst_file_path).map_err(here!())?;
         loop {
             let read = reader.read(&mut buffer).map_err(here!())?;
             if read == 0 {
