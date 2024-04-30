@@ -1,5 +1,5 @@
 [package]
-name = "bisque"
+name = "bisque-core"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 bisque-cipher = { path = "../../libs/bisque-cipher" }
-bisque-core = { path = "../../libs/bisque-core" }
+bisque-google-drive = { path = "../../libs/bisque-google-drive" }
 
-clap = { version = "4.5.3", features = ["derive"] }
+chrono = "0.4.38"
+serde = { workspace = true }
+serde_json = { workspace = true }

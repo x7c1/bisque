@@ -1,13 +1,9 @@
-mod download_file;
-pub use download_file::DownloadFileParams;
-
-mod upload_file;
-pub use upload_file::UploadFileParams;
+pub mod get_file;
+pub mod list_files;
+pub mod upload_file;
 
 mod multipart;
-pub use multipart::Metadata;
-
-use crate::oauth_client::AccessToken;
+use crate::oauth::AccessToken;
 use crate::{here, Result};
 use std::time::Duration;
 

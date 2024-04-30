@@ -1,5 +1,6 @@
-use crate::oauth_client::{AccessToken, RefreshAccessTokenSuccessResponse};
 use crate::{here, Result};
+use bisque_google_drive::oauth::refresh_access_token::SuccessResponse;
+use bisque_google_drive::oauth::AccessToken;
 use chrono::{Duration, Utc};
 use std::fs;
 use std::io::ErrorKind;
@@ -28,7 +29,7 @@ impl SessionStore {
         }
         Ok(Some(session.response.access_token))
     }
-    pub fn save_response(&self, response: RefreshAccessTokenSuccessResponse) -> Result<()> {
+    pub fn save_response(&self, response: SuccessResponse) -> Result<()> {
         let session = Session {
             response: response.clone(),
             created_at: Utc::now().to_rfc3339(),
@@ -51,7 +52,7 @@ impl SessionStore {
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 struct Session {
-    response: RefreshAccessTokenSuccessResponse,
+    response: SuccessResponse,
     created_at: String,
 }
 

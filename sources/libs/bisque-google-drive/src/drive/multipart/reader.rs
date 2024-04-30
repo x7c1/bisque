@@ -1,4 +1,4 @@
-use crate::google_drive_client::multipart::Metadata;
+use crate::schemas::Metadata;
 use crate::{here, Result};
 use std::io::{Cursor, Read};
 

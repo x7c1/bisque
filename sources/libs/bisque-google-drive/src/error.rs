@@ -49,9 +49,3 @@ impl<A: Debug + 'static> From<Located<A>> for Error {
         Error::Inherited(Box::new(value))
     }
 }
-
-impl From<bisque_core::Error> for Error {
-    fn from(e: bisque_core::Error) -> Self {
-        Error::Inherited(Box::new(e))
-    }
-}

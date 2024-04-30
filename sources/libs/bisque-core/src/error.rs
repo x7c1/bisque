@@ -1,9 +1,11 @@
 use std::fmt::Debug;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<A> = std::result::Result<A, Error>;
 
 #[derive(Debug)]
 pub enum Error {
+    Env(EnvError),
+    RefreshAccessToken,
     Inherited(Box<dyn Debug>),
 }
 
@@ -50,8 +52,22 @@ impl<A: Debug + 'static> From<Located<A>> for Error {
     }
 }
 
-impl From<bisque_core::Error> for Error {
-    fn from(e: bisque_core::Error) -> Self {
-        Error::Inherited(Box::new(e))
+#[derive(Debug)]
+pub enum EnvError {
+    NotPresent {
+        key: String,
+    },
+    Empty {
+        key: String,
+    },
+    Other {
+        key: String,
+        cause: std::env::VarError,
+    },
+}
+
+impl From<EnvError> for Error {
+    fn from(e: EnvError) -> Self {
+        Error::Env(e)
     }
 }

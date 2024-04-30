@@ -3,3 +3,10 @@ resolver = "2"
 members = [
     "./sources/apps/bisque",
 ]
+
+[workspace.dependencies.serde]
+version = "1.0.126"
+features = ["derive"]
+
+[workspace.dependencies.serde_json]
+version = "1.0.116"

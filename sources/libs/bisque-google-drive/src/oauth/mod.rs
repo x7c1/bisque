@@ -1,10 +1,9 @@
-mod access_token;
-pub use access_token::AccessToken;
-
 mod exchange_auth_code;
 
-mod refresh_access_token;
-pub use refresh_access_token::{RefreshAccessTokenResponse, RefreshAccessTokenSuccessResponse};
+pub mod refresh_access_token;
+
+mod access_token;
+pub use access_token::AccessToken;
 
 mod refresh_token;
 pub use refresh_token::RefreshToken;
@@ -12,7 +11,7 @@ pub use refresh_token::RefreshToken;
 mod auth_code;
 pub use auth_code::AuthCode;
 
-use crate::{envs, Result};
+use crate::Result;
 
 /// https://developers.google.com/identity/protocols/oauth2/web-server
 pub struct OAuthClient {
@@ -26,16 +25,14 @@ impl OAuthClient {
     const AUTH_URL: &'static str = "https://accounts.google.com/o/oauth2/auth";
     const REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
 
-    pub fn setup() -> Result<Self> {
-        let client_id = envs::require("GOOGLE_CLIENT_ID")?;
-        let client_secret = envs::require("GOOGLE_CLIENT_SECRET")?;
-
+    pub fn setup(client_id: String, client_secret: String) -> Result<Self> {
         Ok(Self {
             client: reqwest::blocking::Client::new(),
             client_id,
             client_secret,
         })
     }
+
     pub fn get_auth_url(&self) -> String {
         format!(
             "{}?client_id={}&redirect_uri={}&response_type=code&scope=https://www.googleapis.com/auth/drive",

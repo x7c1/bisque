@@ -1,10 +1,10 @@
-use crate::oauth_client::{AccessToken, OAuthClient, RefreshToken};
+use crate::oauth::{AccessToken, OAuthClient, RefreshToken};
 use crate::{here, Result};
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(untagged)]
-pub enum RefreshAccessTokenResponse {
-    Success(RefreshAccessTokenSuccessResponse),
+pub enum Response {
+    Success(SuccessResponse),
     BadRequest {
         error: String,
         error_description: String,
@@ -12,7 +12,7 @@ pub enum RefreshAccessTokenResponse {
 }
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub struct RefreshAccessTokenSuccessResponse {
+pub struct SuccessResponse {
     pub access_token: AccessToken,
     pub expires_in: u32,
     pub scope: String,
@@ -20,10 +20,7 @@ pub struct RefreshAccessTokenSuccessResponse {
 
 impl OAuthClient {
     /// https://developers.google.com/identity/protocols/oauth2/web-server#offline
-    pub fn refresh_access_token(
-        &self,
-        refresh_token: &RefreshToken,
-    ) -> Result<RefreshAccessTokenResponse> {
+    pub fn refresh_access_token(&self, refresh_token: &RefreshToken) -> Result<Response> {
         let params = [
             ("client_id", self.client_id.as_str()),
             ("client_secret", self.client_secret.as_str()),
@@ -44,7 +41,7 @@ impl OAuthClient {
             })?;
 
         let body = response.text().map_err(here!())?;
-        let response = serde_json::from_str::<RefreshAccessTokenResponse>(&body)
+        let response = serde_json::from_str::<Response>(&body)
             .map_err(here!())
             .inspect(|response| {
                 println!("[refresh_access_token] Response body: {:#?}", response);

@@ -2,13 +2,12 @@ mod session_store;
 use session_store::SessionStore;
 
 use crate::error::Error;
-use crate::oauth_client::{
-    AccessToken, AuthCode, OAuthClient, RefreshAccessTokenResponse, RefreshToken,
-};
+
 use crate::{envs, here, Result};
+use bisque_google_drive::oauth::refresh_access_token::Response::Success;
+use bisque_google_drive::oauth::{AccessToken, AuthCode, OAuthClient, RefreshToken};
 use std::io;
 use std::path::PathBuf;
-use RefreshAccessTokenResponse::Success;
 
 pub struct AccessTokenLoader {
     oauth_client: OAuthClient,
@@ -17,7 +16,10 @@ pub struct AccessTokenLoader {
 
 impl AccessTokenLoader {
     pub fn setup(session_path: impl Into<PathBuf>) -> Result<Self> {
-        let oauth_client = OAuthClient::setup()?;
+        let client_id = envs::require("GOOGLE_CLIENT_ID")?;
+        let client_secret = envs::require("GOOGLE_CLIENT_SECRET")?;
+
+        let oauth_client = OAuthClient::setup(client_id, client_secret).map_err(here!())?;
         let store = SessionStore::new(session_path);
         Ok(Self {
             oauth_client,
@@ -35,7 +37,11 @@ impl AccessTokenLoader {
             println!("Refresh token is empty.");
             self.retrieve_refresh_token()
         })?;
-        let response = self.oauth_client.refresh_access_token(&refresh_token)?;
+        let response = self
+            .oauth_client
+            .refresh_access_token(&refresh_token)
+            .map_err(here!())?;
+
         if let Success(response) = response {
             let access_token = response.access_token.clone();
             self.session_store.save_response(response)?;
@@ -51,7 +57,11 @@ impl AccessTokenLoader {
         let mut _key = String::new();
         io::stdin().read_line(&mut _key).map_err(here!())?;
 
-        let response = self.oauth_client.refresh_access_token(&refresh_token)?;
+        let response = self
+            .oauth_client
+            .refresh_access_token(&refresh_token)
+            .map_err(here!())?;
+
         if let Success(response) = response {
             let access_token = response.access_token.clone();
             self.session_store.save_response(response)?;
@@ -68,7 +78,9 @@ impl AccessTokenLoader {
         println!("Enter the authorization code:");
         let auth_code = self.scan_auth_code()?;
 
-        self.oauth_client.exchange_auth_code(&auth_code)
+        self.oauth_client
+            .exchange_auth_code(&auth_code)
+            .map_err(here!())
     }
 
     fn scan_auth_code(&self) -> Result<AuthCode> {

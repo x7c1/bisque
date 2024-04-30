@@ -1,5 +1,5 @@
-use crate::access_token_loader::AccessTokenLoader;
-use crate::google_drive_client::{DownloadFileParams, GoogleDriveClient};
+use bisque_core::AccessTokenLoader;
+use bisque_core::{command::download_file, BisqueClient};
 use clap::Parser;
 use std::path::PathBuf;
 
@@ -25,8 +25,8 @@ pub fn run(args: Args) -> crate::Result<()> {
     let access_token_loader = AccessTokenLoader::setup(args.session_file)?;
     let access_token = access_token_loader.load()?;
 
-    let drive_client = GoogleDriveClient::new(access_token)?;
-    drive_client.download_file(DownloadFileParams {
+    let client = BisqueClient::new(access_token)?;
+    client.download_file(download_file::Params {
         key_file_path: args.key_file,
         src_name: args.file_name.clone(),
         src_folder_id: args.folder_id,

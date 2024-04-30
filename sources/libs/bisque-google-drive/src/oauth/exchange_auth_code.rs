@@ -1,5 +1,6 @@
 use crate::here;
-use crate::oauth_client::{AccessToken, AuthCode, OAuthClient, RefreshToken};
+use crate::oauth::{AccessToken, AuthCode, OAuthClient, RefreshToken};
+use crate::Result;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct ExchangeAuthCodeResponse {
@@ -9,7 +10,7 @@ pub struct ExchangeAuthCodeResponse {
 
 impl OAuthClient {
     /// https://developers.google.com/identity/protocols/oauth2/web-server#exchange-authorization-code
-    pub fn exchange_auth_code(&self, auth_code: &AuthCode) -> crate::Result<RefreshToken> {
+    pub fn exchange_auth_code(&self, auth_code: &AuthCode) -> Result<RefreshToken> {
         let params = [
             ("client_id", self.client_id.as_str()),
             ("client_secret", self.client_secret.as_str()),

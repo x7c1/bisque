@@ -4,17 +4,12 @@ use generate_boundary::generate_boundary;
 mod reader;
 use reader::Reader;
 
-use crate::google_drive_client::GoogleDriveClient;
+use crate::drive::GoogleDriveClient;
+use crate::schemas::Metadata;
 use crate::Result;
 use reqwest::blocking::{Body, RequestBuilder};
 use reqwest::IntoUrl;
 use std::io::Read;
-
-#[derive(Debug, serde::Serialize)]
-pub struct Metadata {
-    pub name: String,
-    pub parents: Vec<String>,
-}
 
 impl GoogleDriveClient {
     pub(crate) fn post_multipart_related<U: IntoUrl>(
