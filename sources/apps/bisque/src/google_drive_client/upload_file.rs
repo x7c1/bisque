@@ -1,6 +1,6 @@
 use crate::google_drive_client::{GoogleDriveClient, Metadata};
 use crate::{here, Result};
-use bisque_cipher::Encryptor;
+use bisque_cipher::Encrypter;
 use std::fs::File;
 
 impl GoogleDriveClient {
@@ -19,11 +19,11 @@ impl GoogleDriveClient {
         // TODO
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
-        let encryptor = Encryptor::new(file, key, iv).unwrap();
+        let encrypter = Encrypter::new(file, key, iv).unwrap();
 
         let url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
         let response = self
-            .post_multipart_related(url, metadata, encryptor)?
+            .post_multipart_related(url, metadata, encrypter)?
             .send()
             .map_err(here!())
             .inspect(|response| {

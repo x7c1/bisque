@@ -1,10 +1,10 @@
-use crate::Error::CannotCreateEncryptor;
+use crate::Error::CannotCreateEncrypter;
 use crate::Result;
 use openssl::symm::{Cipher, Crypter, Mode};
 use std::io;
 use std::io::{Read, Write};
 
-pub struct Encryptor<R> {
+pub struct Encrypter<R> {
     inner: R,
     crypter: Crypter,
     block_size: usize,
@@ -13,13 +13,13 @@ pub struct Encryptor<R> {
     buffer_min_size: usize,
 }
 
-impl<R: Read> Encryptor<R> {
+impl<R: Read> Encrypter<R> {
     pub fn new(reader: R, key: &[u8], iv: &[u8]) -> Result<Self> {
         let cipher = Cipher::aes_256_cbc();
         let crypter = Crypter::new(cipher, Mode::Encrypt, key, Some(iv))
-            .map_err(|cause| CannotCreateEncryptor { cause })?;
+            .map_err(|cause| CannotCreateEncrypter { cause })?;
 
-        Ok(Encryptor {
+        Ok(Encrypter {
             inner: reader,
             crypter,
             block_size: cipher.block_size(),
@@ -43,7 +43,7 @@ impl<R: Read> Encryptor<R> {
     }
 }
 
-impl<R: Read> Read for Encryptor<R> {
+impl<R: Read> Read for Encrypter<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if !self.buffer.is_empty() {
             let (moved, remaining) = move_buffer(buf, &self.buffer)?;
@@ -105,14 +105,14 @@ mod tests {
         "./samples/test2_3_encrypted_output1.cbc.tmp",
         "./samples/test2_3_expected_output1.png.tmp"
     )]
-    fn test2_encryptor(input_file: &str, encrypted_file: &str, expected_file: &str) {
+    fn test2_encrypter(input_file: &str, encrypted_file: &str, expected_file: &str) {
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
-        let mut encryptor = Encryptor::new(File::open(input_file).unwrap(), key, iv).unwrap();
+        let mut encrypter = Encrypter::new(File::open(input_file).unwrap(), key, iv).unwrap();
 
         let mut file = File::create(encrypted_file).unwrap();
         let mut bytes = vec![];
-        let _len = encryptor.read_to_end(&mut bytes).unwrap();
+        let _len = encrypter.read_to_end(&mut bytes).unwrap();
         file.write_all(&bytes).unwrap();
 
         openssl_usage::encrypt_file(input_file, expected_file, key, iv).unwrap();
@@ -129,9 +129,9 @@ mod tests {
 
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
-        let mut encryptor = Encryptor::new(File::open(input_file).unwrap(), key, iv).unwrap();
+        let mut encrypter = Encrypter::new(File::open(input_file).unwrap(), key, iv).unwrap();
 
-        // Encryptor::read() was called with these byte counts
+        // Encrypter::read() was called with these byte counts
         // by reqwest post() although the reason was unclear.
         let uneven_bytes = &[
             7883, 11, //
@@ -143,7 +143,7 @@ mod tests {
         let mut file = File::create(output_file).unwrap();
         for bytes in uneven_bytes {
             let mut buffer = vec![0; *bytes];
-            let loaded = encryptor.read(&mut buffer).unwrap();
+            let loaded = encrypter.read(&mut buffer).unwrap();
             let _written = file.write(&buffer[..loaded]).unwrap();
         }
         openssl_usage::encrypt_file(input_file, expected_file, key, iv).unwrap();

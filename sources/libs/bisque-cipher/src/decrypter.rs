@@ -1,10 +1,10 @@
-use crate::Error::CannotCreateDecryptor;
+use crate::Error::CannotCreateDecrypter;
 use crate::Result;
 use openssl::symm::{Cipher, Crypter, Mode};
 use std::io;
 use std::io::{Read, Write};
 
-pub struct Decryptor<R> {
+pub struct Decrypter<R> {
     inner: R,
     crypter: Crypter,
     block_size: usize,
@@ -13,13 +13,13 @@ pub struct Decryptor<R> {
     buffer_min_size: usize,
 }
 
-impl<R: Read> Decryptor<R> {
+impl<R: Read> Decrypter<R> {
     pub fn new(reader: R, key: &[u8], iv: &[u8]) -> Result<Self> {
         let cipher = Cipher::aes_256_cbc();
         let crypter = Crypter::new(cipher, Mode::Decrypt, key, Some(iv))
-            .map_err(|cause| CannotCreateDecryptor { cause })?;
+            .map_err(|cause| CannotCreateDecrypter { cause })?;
 
-        Ok(Decryptor {
+        Ok(Decrypter {
             inner: reader,
             crypter,
             block_size: cipher.block_size(),
@@ -43,7 +43,7 @@ impl<R: Read> Decryptor<R> {
     }
 }
 
-impl<R: Read> Read for Decryptor<R> {
+impl<R: Read> Read for Decrypter<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if !self.buffer.is_empty() {
             let (moved, remaining) = move_buffer(buf, &self.buffer)?;
@@ -105,14 +105,14 @@ mod tests {
         "./samples/test4_3_decrypted_output1.png.tmp",
         "./samples/input_image.png"
     )]
-    fn test4_decryptor(input_file: &str, decrypted_file: &str, expected_file: &str) {
+    fn test4_decrypter(input_file: &str, decrypted_file: &str, expected_file: &str) {
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
-        let mut decryptor = Decryptor::new(File::open(input_file).unwrap(), key, iv).unwrap();
+        let mut decrypter = Decrypter::new(File::open(input_file).unwrap(), key, iv).unwrap();
 
         let mut file = File::create(decrypted_file).unwrap();
         let mut bytes = vec![];
-        let _len = decryptor.read_to_end(&mut bytes).unwrap();
+        let _len = decrypter.read_to_end(&mut bytes).unwrap();
         file.write_all(&bytes).unwrap();
 
         // openssl_usage::decrypt_file(input_file, expected_file, key, iv).unwrap();

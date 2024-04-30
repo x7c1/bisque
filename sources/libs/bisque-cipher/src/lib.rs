@@ -1,12 +1,13 @@
 mod openssl_usage;
 
-mod decryptor;
+mod decrypter;
+pub use decrypter::Decrypter;
 
 mod encryption_key;
 pub use encryption_key::EncryptionKey;
 
-mod encryptor;
-pub use encryptor::Encryptor;
+mod encrypter;
+pub use encrypter::Encrypter;
 
 mod error;
 pub use error::{Error, Result};

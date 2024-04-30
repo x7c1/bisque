@@ -5,10 +5,10 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    CannotCreateEncryptor {
+    CannotCreateEncrypter {
         cause: ErrorStack,
     },
-    CannotCreateDecryptor {
+    CannotCreateDecrypter {
         cause: ErrorStack,
     },
     KeyFileAlreadyExists {
