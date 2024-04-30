@@ -1,7 +1,5 @@
 use crate::Error::{CannotReadKeyFile, CannotWriteKeyFile, KeyFileAlreadyExists, WrongSizeKeyFile};
 use crate::Result;
-use aes::cipher::consts::U32;
-use aes::cipher::generic_array::GenericArray;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use std::fs;
@@ -49,8 +47,12 @@ impl EncryptionKey {
         Ok(())
     }
 
-    pub fn as_array(&self) -> &GenericArray<u8, U32> {
-        GenericArray::from_slice(&self.0)
+    pub fn into_key(self) -> [u8; 32] {
+        self.0
+    }
+
+    pub fn into_iv(self) -> [u8; 16] {
+        self.0[..16].try_into().unwrap()
     }
 
     fn generate_seed() -> [u8; Self::SIZE * 2] {

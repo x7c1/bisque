@@ -1,6 +1,6 @@
 use crate::bisque_client::BisqueClient;
 use crate::{here, Result};
-use bisque_cipher::Encrypter;
+use bisque_cipher::{Encrypter, EncryptionKey};
 use bisque_google_drive::drive::upload_file;
 use bisque_google_drive::schemas::Metadata;
 use std::fs::File;
@@ -26,10 +26,12 @@ impl BisqueClient {
             name: params.dst_name,
             parents: vec![params.dst_folder_id],
         };
-        // TODO: use secret key
-        let key = b"01234567890123456789012345678901";
-        let iv = b"0123456789012345";
-        let encrypter = Encrypter::new(file, key, iv).map_err(here!())?;
+        let key = EncryptionKey::from_file(&params.key_file_path)
+            .map_err(here!())?
+            .into_key();
+
+        let iv = EncryptionKey::generate().into_iv();
+        let encrypter = Encrypter::new(file, &key, &iv).map_err(here!())?;
 
         self.drive_client
             .upload_file(upload_file::Request {

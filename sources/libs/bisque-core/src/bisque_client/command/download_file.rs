@@ -1,7 +1,7 @@
 use crate::bisque_client::BisqueClient;
 use crate::command::download_file::Error::{MultipleFiles, NotFound};
 use crate::{here, Result};
-use bisque_cipher::Decrypter;
+use bisque_cipher::{Decrypter, EncryptionKey};
 use bisque_google_drive::drive::{download_file, list_files};
 use bisque_google_drive::schemas::File;
 use std::io;
@@ -34,11 +34,8 @@ impl BisqueClient {
             file_id: found.id.clone(),
         };
         let response = self.drive_client.download_file(request).map_err(here!())?;
-
-        // TODO: use secret key
-        let key = b"01234567890123456789012345678901";
-        let iv = b"0123456789012345";
-        let mut reader = Decrypter::new(response, key, iv).map_err(here!())?;
+        let key = EncryptionKey::from_file(&params.key_file_path).map_err(here!())?;
+        let mut reader = Decrypter::new(response, &key.into_key()).map_err(here!())?;
 
         let mut file = std::fs::File::create(&params.dst_file_path).map_err(here!())?;
         io::copy(&mut reader, &mut file).map_err(here!())?;

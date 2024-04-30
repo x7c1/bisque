@@ -11,13 +11,19 @@ pub struct Encrypter<R> {
 }
 
 impl<R: Read> Encrypter<R> {
-    pub fn new(reader: R, key: &[u8], iv: &[u8]) -> Result<Self> {
+    pub fn new(reader: R, key: &[u8; 32], iv: &[u8; 16]) -> Result<Self> {
         let cipher = Cipher::aes_256_cbc();
         let openssl_crypter = symm::Crypter::new(cipher, Mode::Encrypt, key, Some(iv))
             .map_err(|cause| CannotCreateEncrypter { cause })?;
 
         Ok(Encrypter {
-            inner: Crypter::new(reader, openssl_crypter, cipher.block_size())?,
+            inner: Crypter::new(
+                reader,
+                openssl_crypter,
+                cipher.block_size(),
+                // embed iv bytes into head of reader
+                iv.to_vec(),
+            )?,
         })
     }
 }
@@ -40,22 +46,22 @@ mod tests {
     #[case::empty_text(
         "./samples/decrypted/empty.txt",
         "./samples/encrypted.output/test2_0.cbc",
-        "./samples/encrypted/empty.cbc"
+        "./samples/encrypted/empty_v2.cbc"
     )]
     #[case::small_text(
         "./samples/decrypted/text_smaller_than_block_size.txt",
         "./samples/encrypted.output/test2_1.cbc",
-        "./samples/encrypted/text_smaller_than_block_size.cbc"
+        "./samples/encrypted/text_smaller_than_block_size_v2.cbc"
     )]
     #[case::large_text(
         "./samples/decrypted/text_larger_than_block_size.txt",
         "./samples/encrypted.output/test2_2.cbc",
-        "./samples/encrypted/text_larger_than_block_size.cbc"
+        "./samples/encrypted/text_larger_than_block_size_v2.cbc"
     )]
     #[case::image(
         "./samples/decrypted/image.png",
         "./samples/encrypted.output/test2_3.cbc",
-        "./samples/encrypted/image.cbc"
+        "./samples/encrypted/image_v2.cbc"
     )]
     fn test2_encrypter(input_file: &str, encrypted_file: &str, expected_file: &str) {
         let key = b"01234567890123456789012345678901";
@@ -69,14 +75,14 @@ mod tests {
 
         let expected_bytes = fs::read(expected_file).unwrap();
         let actual_bytes = fs::read(encrypted_file).unwrap();
-        assert_eq!(expected_bytes, actual_bytes);
+        assert_eq!(actual_bytes, expected_bytes);
     }
 
     #[rstest]
     fn test3_uneven_read_call() {
         let input_file = "./samples/decrypted/image.png";
         let output_file = "./samples/encrypted.output/test3_1.cbc";
-        let expected_file = "./samples/encrypted/image.cbc";
+        let expected_file = "./samples/encrypted/image_v2.cbc";
 
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
@@ -99,6 +105,6 @@ mod tests {
         }
         let expected_bytes = fs::read(expected_file).unwrap();
         let actual_bytes = fs::read(output_file).unwrap();
-        assert_eq!(expected_bytes, actual_bytes);
+        assert_eq!(actual_bytes, expected_bytes);
     }
 }

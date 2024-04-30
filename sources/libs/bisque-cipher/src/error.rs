@@ -14,6 +14,9 @@ pub enum Error {
     KeyFileAlreadyExists {
         path: String,
     },
+    CannotReadIv {
+        cause: io::Error,
+    },
     CannotReadKeyFile {
         path: String,
         cause: io::Error,

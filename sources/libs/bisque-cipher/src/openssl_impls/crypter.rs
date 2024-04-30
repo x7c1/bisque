@@ -12,13 +12,18 @@ pub struct Crypter<R> {
 }
 
 impl<R: Read> Crypter<R> {
-    pub fn new(reader: R, crypter: symm::Crypter, block_size: usize) -> crate::Result<Self> {
+    pub fn new(
+        reader: R,
+        crypter: symm::Crypter,
+        block_size: usize,
+        buffer: Vec<u8>,
+    ) -> crate::Result<Self> {
         Ok(Crypter {
             inner: reader,
             crypter,
             block_size,
             finalized: false,
-            buffer: vec![],
+            buffer,
             buffer_min_size: 4096,
         })
     }

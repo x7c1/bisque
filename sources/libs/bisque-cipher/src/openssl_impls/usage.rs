@@ -86,6 +86,6 @@ mod tests {
 
         let expected_bytes = fs::read(input_file).unwrap();
         let actual_bytes = fs::read(decrypted_file).unwrap();
-        assert_eq!(expected_bytes, actual_bytes);
+        assert_eq!(actual_bytes, expected_bytes);
     }
 }
