@@ -29,16 +29,17 @@ impl AccessTokenLoader {
         if let Some(access_token) = self.session_store.find_access_token()? {
             return Ok(access_token);
         } else {
-            println!("Access token is empty");
+            println!("Access token is empty or expired.");
         }
         let refresh_token = self.find_refresh_token().transpose().unwrap_or_else(|| {
-            println!("Refresh token is empty");
+            println!("Refresh token is empty.");
             self.retrieve_refresh_token()
         })?;
         let response = self.oauth_client.refresh_access_token(&refresh_token)?;
         if let Success(response) = response {
-            self.session_store.save_response(&response)?;
-            return Ok(response.access_token);
+            let access_token = response.access_token.clone();
+            self.session_store.save_response(response)?;
+            return Ok(access_token);
         }
         println!("Maybe refresh token is expired.");
         let refresh_token = self.retrieve_refresh_token()?;
@@ -52,8 +53,9 @@ impl AccessTokenLoader {
 
         let response = self.oauth_client.refresh_access_token(&refresh_token)?;
         if let Success(response) = response {
-            self.session_store.save_response(&response)?;
-            return Ok(response.access_token);
+            let access_token = response.access_token.clone();
+            self.session_store.save_response(response)?;
+            return Ok(access_token);
         }
         println!("Failed to refresh access token.");
         Err(Error::RefreshAccessToken)

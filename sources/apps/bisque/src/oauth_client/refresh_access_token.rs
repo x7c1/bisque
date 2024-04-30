@@ -11,7 +11,7 @@ pub enum RefreshAccessTokenResponse {
     },
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct RefreshAccessTokenSuccessResponse {
     pub access_token: AccessToken,
     pub expires_in: u32,

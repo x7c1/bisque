@@ -1,5 +1,6 @@
 use crate::oauth_client::{AccessToken, RefreshAccessTokenSuccessResponse};
 use crate::{here, Result};
+use chrono::{Duration, Utc};
 use std::fs;
 use std::io::ErrorKind;
 use std::path::PathBuf;
@@ -18,14 +19,21 @@ impl SessionStore {
         let Some(content) = self.load_cache()? else {
             return Ok(None);
         };
-        let response = serde_json::from_slice::<RefreshAccessTokenSuccessResponse>(&content)
-            .map_err(here!())?;
+        let session = serde_json::from_slice::<Session>(&content).map_err(here!())?;
+        println!("Session found. {:#?}", session);
 
-        println!("Session found. {:#?}", response);
-        Ok(Some(response.access_token))
+        if session.is_expired()? {
+            println!("Session is expired.");
+            return Ok(None);
+        }
+        Ok(Some(session.response.access_token))
     }
-    pub fn save_response(&self, response: &RefreshAccessTokenSuccessResponse) -> Result<()> {
-        let content = serde_json::to_vec_pretty(response).map_err(here!())?;
+    pub fn save_response(&self, response: RefreshAccessTokenSuccessResponse) -> Result<()> {
+        let session = Session {
+            response: response.clone(),
+            created_at: Utc::now().to_rfc3339(),
+        };
+        let content = serde_json::to_vec_pretty(&session).map_err(here!())?;
         fs::write(&self.cache_path, content).map_err(here!())?;
         Ok(())
     }
@@ -38,5 +46,20 @@ impl SessionStore {
             ErrorKind::NotFound => Ok(None),
             _ => Err(error).map_err(here!())?,
         }
+    }
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+struct Session {
+    response: RefreshAccessTokenSuccessResponse,
+    created_at: String,
+}
+
+impl Session {
+    fn is_expired(&self) -> Result<bool> {
+        let created_at = chrono::DateTime::parse_from_rfc3339(&self.created_at).map_err(here!())?;
+        let expired_at = created_at + Duration::seconds(self.response.expires_in.into());
+        let now = Utc::now();
+        Ok(expired_at < now)
     }
 }

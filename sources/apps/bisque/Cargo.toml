@@ -8,8 +8,9 @@ edition = "2021"
 [dependencies]
 bisque-cipher = { path = "../../libs/bisque-cipher" }
 
+chrono = "0.4.38"
 clap = { version = "4.5.3", features = ["derive"] }
-reqwest = { version = "0.11.26", features = ["blocking", "json"] }
+reqwest = { version = "0.12.4", features = ["blocking", "json"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 url = "2.5.0"

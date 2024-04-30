@@ -1,19 +1,12 @@
 use std::fmt::Debug;
-use std::io;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    RefreshAccessToken,
-
-    // inherited errors
-    Cypher(Inherited<bisque_cipher::Error>),
     Env(EnvError),
-    Io(Inherited<io::Error>),
-    Reqwest(Inherited<reqwest::Error>),
-    SerdeJson(Inherited<serde_json::Error>),
-    ParseUrl(Inherited<url::ParseError>),
+    RefreshAccessToken,
+    Inherited(Box<dyn Debug>),
 }
 
 #[derive(Debug)]
@@ -40,46 +33,22 @@ macro_rules! here {
 }
 
 #[derive(Debug)]
-pub struct Inherited<A: Debug> {
+pub struct Located<A: Debug> {
     pub cause: A,
     pub location: Location,
 }
 
 pub fn attach<E>(location: Location) -> impl FnOnce(E) -> Error
 where
-    Inherited<E>: Into<Error>,
+    Located<E>: Into<Error>,
     E: Debug,
 {
-    |cause| Inherited { cause, location }.into()
+    |cause| Located { cause, location }.into()
 }
 
-impl From<Inherited<bisque_cipher::Error>> for Error {
-    fn from(inherited: Inherited<bisque_cipher::Error>) -> Self {
-        Error::Cypher(inherited)
-    }
-}
-
-impl From<Inherited<io::Error>> for Error {
-    fn from(inherited: Inherited<io::Error>) -> Self {
-        Error::Io(inherited)
-    }
-}
-
-impl From<Inherited<reqwest::Error>> for Error {
-    fn from(inherited: Inherited<reqwest::Error>) -> Self {
-        Error::Reqwest(inherited)
-    }
-}
-
-impl From<Inherited<serde_json::Error>> for Error {
-    fn from(inherited: Inherited<serde_json::Error>) -> Self {
-        Error::SerdeJson(inherited)
-    }
-}
-
-impl From<Inherited<url::ParseError>> for Error {
-    fn from(inherited: Inherited<url::ParseError>) -> Self {
-        Error::ParseUrl(inherited)
+impl<A: Debug + 'static> From<Located<A>> for Error {
+    fn from(value: Located<A>) -> Self {
+        Error::Inherited(Box::new(value))
     }
 }
 
