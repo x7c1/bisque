@@ -1,5 +1,6 @@
 use crate::drive::GoogleDriveClient;
 use crate::{here, Result};
+use reqwest::Url;
 use std::io::Read;
 
 pub struct Request {
@@ -18,11 +19,17 @@ impl Read for Response {
 
 impl GoogleDriveClient {
     /// https://developers.google.com/drive/api/v3/reference/files/get
-    pub fn get_file(&self, request: Request) -> Result<Response> {
-        let url = format!(
-            "https://www.googleapis.com/drive/v3/files/{}?alt=media",
-            request.file_id
-        );
+    pub fn download_file(&self, request: Request) -> Result<Response> {
+        let url = Url::parse_with_params(
+            &format!(
+                "https://www.googleapis.com/drive/v3/files/{file_id}",
+                file_id = request.file_id
+            ),
+            &[("alt", "media")],
+        )
+        .map_err(here!())?;
+
+        println!("[get_file] url:{}", url);
         let response = self
             .client
             .get(url)

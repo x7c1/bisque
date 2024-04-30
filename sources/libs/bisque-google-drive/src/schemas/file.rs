@@ -1,4 +1,4 @@
-#[derive(Debug, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Deserialize)]
 pub struct File {
     pub kind: String,
     pub id: String,

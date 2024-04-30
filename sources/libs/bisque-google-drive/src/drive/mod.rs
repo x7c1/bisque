@@ -1,4 +1,4 @@
-pub mod get_file;
+pub mod download_file;
 pub mod list_files;
 pub mod upload_file;
 

@@ -1,6 +1,7 @@
 use crate::drive::GoogleDriveClient;
 use crate::schemas::Metadata;
 use crate::{here, Result};
+use reqwest::Url;
 use std::io::Read;
 
 pub struct Request<A> {
@@ -16,17 +17,18 @@ impl GoogleDriveClient {
     where
         A: Read + Send + 'static,
     {
-        println!("[upload_file]");
+        let url = Url::parse_with_params(
+            "https://www.googleapis.com/upload/drive/v3/files",
+            &[("uploadType", "multipart")],
+        )
+        .map_err(here!())?;
 
-        let url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
         let response = self
             .post_multipart_related(url, request.metadata, request.reader)?
             .send()
-            .map_err(here!())
-            .inspect(|response| {
-                println!("[upload_file] Response status: {}", response.status());
-            })?;
+            .map_err(here!())?;
 
+        println!("[upload_file] Response status: {}", response.status());
         println!(
             "[upload_file] Response: {}",
             response.text().map_err(here!())?

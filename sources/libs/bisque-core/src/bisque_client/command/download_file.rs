@@ -1,8 +1,10 @@
 use crate::bisque_client::BisqueClient;
+use crate::command::download_file::Error::{MultipleFiles, NotFound};
 use crate::{here, Result};
 use bisque_cipher::Decrypter;
-use bisque_google_drive::drive::{get_file, list_files};
-use std::io::{Read, Write};
+use bisque_google_drive::drive::{download_file, list_files};
+use bisque_google_drive::schemas::File;
+use std::io;
 use std::path::PathBuf;
 
 #[derive(Debug)]
@@ -18,42 +20,60 @@ impl BisqueClient {
     pub fn download_file(&self, params: Params) -> Result<()> {
         println!("{:#?}", params);
 
-        let response = self
-            .drive_client
-            .list_files(list_files::Request {
-                folder_id: params.src_folder_id.clone(),
-                name: params.src_name.clone(),
-            })
-            .map_err(here!())?;
-
-        // TODO: remove panic
-        let found = match response.files.as_slice() {
-            [] => panic!("no files found."),
-            [file] => file,
-            _ => panic!("{} files found.", response.files.len()),
+        let request = list_files::Request {
+            folder_id: params.src_folder_id.clone(),
+            name: params.src_name.clone(),
         };
-        println!("found: {:#?}", found);
+        let response = self.drive_client.list_files(request).map_err(here!())?;
+        println!("[download_file] response: {:#?}", response);
 
-        let response = self
-            .drive_client
-            .get_file(get_file::Request {
-                file_id: found.id.clone(),
-            })
-            .map_err(here!())?;
+        let found = require_single_file(response, &params).map_err(here!())?;
+        println!("[download_file] found: {:#?}", found);
+
+        let request = download_file::Request {
+            file_id: found.id.clone(),
+        };
+        let response = self.drive_client.download_file(request).map_err(here!())?;
 
         // TODO: use secret key
         let key = b"01234567890123456789012345678901";
         let iv = b"0123456789012345";
         let mut reader = Decrypter::new(response, key, iv).map_err(here!())?;
-        let mut buffer = vec![0; 4096];
+
         let mut file = std::fs::File::create(&params.dst_file_path).map_err(here!())?;
-        loop {
-            let read = reader.read(&mut buffer).map_err(here!())?;
-            if read == 0 {
-                break;
-            }
-            file.write_all(&buffer[..read]).map_err(here!())?;
-        }
+        io::copy(&mut reader, &mut file).map_err(here!())?;
+
         Ok(())
     }
+}
+
+fn require_single_file(
+    response: list_files::Response,
+    params: &Params,
+) -> std::result::Result<File, Error> {
+    match response.files.as_slice() {
+        [file] => Ok(file.clone()),
+        [] => Err(NotFound {
+            name: params.src_name.clone(),
+            folder_id: params.src_folder_id.clone(),
+        }),
+        _ => Err(MultipleFiles {
+            name: params.src_name.clone(),
+            folder_id: params.src_folder_id.clone(),
+            files: response.files,
+        }),
+    }
+}
+
+#[derive(Debug)]
+pub enum Error {
+    NotFound {
+        name: String,
+        folder_id: String,
+    },
+    MultipleFiles {
+        name: String,
+        folder_id: String,
+        files: Vec<File>,
+    },
 }
