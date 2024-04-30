@@ -10,6 +10,7 @@ pub struct Encryptor<R> {
     block_size: usize,
     finalized: bool,
     buffer: Vec<u8>,
+    buffer_min_size: usize,
 }
 
 impl<R: Read> Encryptor<R> {
@@ -24,18 +25,21 @@ impl<R: Read> Encryptor<R> {
             block_size: cipher.block_size(),
             finalized: false,
             buffer: vec![],
+            buffer_min_size: 4096,
         })
     }
 
-    fn finalize(&mut self, mut buf: &mut [u8]) -> io::Result<usize> {
+    fn finalize(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if self.finalized {
             return Ok(0);
         }
         let mut output = vec![0; self.block_size];
         let written = self.crypter.finalize(&mut output)?;
-        buf.write_all(&output[..written])?;
         self.finalized = true;
-        Ok(written)
+
+        let (moved, remaining) = move_buffer(buf, &output[..written])?;
+        self.buffer = remaining.to_vec();
+        Ok(moved)
     }
 }
 
@@ -46,18 +50,18 @@ impl<R: Read> Read for Encryptor<R> {
             self.buffer = remaining.to_vec();
             return Ok(moved);
         }
-        let mut cache = vec![0; 4096];
-        let loaded = self.inner.read(&mut cache)?;
+        let mut buffer = vec![0; self.buffer_min_size.max(buf.len())];
+        let loaded = self.inner.read(&mut buffer)?;
 
         let mut output = vec![0; loaded + self.block_size];
-        let updated = {
-            let input = &cache[..loaded];
+        let written = {
+            let input = &buffer[..loaded];
             self.crypter.update(input, &mut output)?
         };
-        if updated == 0 {
+        if written == 0 {
             self.finalize(buf)
         } else {
-            let (moved, remaining) = move_buffer(buf, &output[..updated])?;
+            let (moved, remaining) = move_buffer(buf, &output[..written])?;
             self.buffer = remaining.to_vec();
             Ok(moved)
         }
