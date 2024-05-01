@@ -1,17 +1,16 @@
 use crate::bisque_client::BisqueClient;
 use crate::command::download_file::Error::{MultipleFiles, NotFound};
+use crate::models::{DirPath, FilePath};
 use crate::{here, Result};
 use bisque_cipher::{Decrypter, EncryptionKey};
 use bisque_google_drive::drive::{download_file, list_files};
 use bisque_google_drive::schemas::{File, FileName};
-use std::io;
-use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Params {
     /// key file to encrypt/decrypt
-    pub key_file_path: String,
-    pub dst_dir_path: PathBuf,
+    pub key_file_path: FilePath,
+    pub dst_dir_path: DirPath,
     pub src_name: FileName,
     pub src_folder_id: String,
 }
@@ -36,12 +35,10 @@ impl BisqueClient {
         let response = self.drive_client.download_file(request).map_err(here!())?;
         let key = EncryptionKey::restore_from_file(&params.key_file_path).map_err(here!())?;
         let mut reader = Decrypter::extract_iv(response, key).map_err(here!())?;
-
-        let dst_file_path =
-            PathBuf::from(&params.dst_dir_path).join(params.src_name.escape_for_file_system());
-
-        let mut file = std::fs::File::create(dst_file_path).map_err(here!())?;
-        io::copy(&mut reader, &mut file).map_err(here!())?;
+        params
+            .dst_dir_path
+            .create_file(&params.src_name, &mut reader)
+            .map_err(here!())?;
 
         Ok(())
     }
