@@ -1,5 +1,6 @@
 use openssl::error::ErrorStack;
 use std::io;
+use std::path::PathBuf;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -18,7 +19,7 @@ pub enum Error {
         cause: io::Error,
     },
     CannotReadKeyFile {
-        path: String,
+        path: PathBuf,
         cause: io::Error,
     },
     CannotWriteKeyFile {
@@ -26,7 +27,7 @@ pub enum Error {
         cause: io::Error,
     },
     WrongSizeKeyFile {
-        path: String,
+        path: PathBuf,
         expected: usize,
         actual: usize,
     },

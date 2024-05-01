@@ -1,4 +1,5 @@
 use crate::bisque_client::BisqueClient;
+use crate::models::FilePath;
 use crate::{here, Result};
 use bisque_cipher::{Encrypter, RandomBytes};
 use bisque_google_drive::drive::upload_file;
@@ -8,9 +9,8 @@ use std::fs::File;
 #[derive(Debug)]
 pub struct Params {
     /// key file to encrypt/decrypt
-    pub key_file_path: String,
-    pub src_file_path: String,
-    pub dst_name: String,
+    pub key_file_path: FilePath,
+    pub src_file_path: FilePath,
     pub dst_folder_id: String,
 }
 
@@ -23,7 +23,7 @@ impl BisqueClient {
         println!("[upload_file] File size: {}", file_size);
 
         let metadata = Metadata {
-            name: params.dst_name,
+            name: params.src_file_path.file_name,
             parents: vec![params.dst_folder_id],
         };
         let reader = {

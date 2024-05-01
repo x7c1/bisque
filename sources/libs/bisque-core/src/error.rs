@@ -1,10 +1,18 @@
 use std::fmt::Debug;
+use std::path::PathBuf;
 
 pub type Result<A> = std::result::Result<A, Error>;
 
 #[derive(Debug)]
 pub enum Error {
     Env(EnvError),
+    CannotAccessFile {
+        path: PathBuf,
+        cause: std::io::Error,
+    },
+    FileNameNotSpecified {
+        path: PathBuf,
+    },
     RefreshAccessToken,
     Inherited(Box<dyn Debug>),
 }

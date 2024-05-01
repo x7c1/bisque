@@ -3,6 +3,7 @@ use crate::Result;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use std::fs;
+use std::path::Path;
 
 pub struct RandomBytes([u8; Self::SIZE]);
 
@@ -16,14 +17,15 @@ impl RandomBytes {
         RandomBytes(key)
     }
 
-    pub fn restore_from_file(path: &str) -> Result<Self> {
+    pub fn restore_from_file(path: impl AsRef<Path>) -> Result<Self> {
+        let path = path.as_ref();
         let bytes = fs::read(path).map_err(|cause| CannotReadKeyFile {
-            path: path.to_string(),
+            path: path.to_path_buf(),
             cause,
         })?;
         if bytes.len() != Self::SIZE {
             return Err(WrongSizeKeyFile {
-                path: path.to_string(),
+                path: path.to_path_buf(),
                 expected: Self::SIZE,
                 actual: bytes.len(),
             });
