@@ -35,7 +35,7 @@ impl BisqueClient {
         };
         let response = self.drive_client.download_file(request).map_err(here!())?;
         let key = RandomBytes::restore_from_file(&params.key_file_path).map_err(here!())?;
-        let mut reader = Decrypter::new(response, &key.into_key()).map_err(here!())?;
+        let mut reader = Decrypter::extract_iv(response, &key.into_key()).map_err(here!())?;
 
         let mut file = std::fs::File::create(&params.dst_file_path).map_err(here!())?;
         io::copy(&mut reader, &mut file).map_err(here!())?;

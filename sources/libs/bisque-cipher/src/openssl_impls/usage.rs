@@ -65,18 +65,18 @@ mod tests {
     #[rstest(input_file, encrypted_file, decrypted_file)]
     #[case::small_text(
         "./samples/decrypted/text_smaller_than_block_size.txt",
-        "./samples/encrypted.output/test1_1.cbc",
-        "./samples/decrypted.output/test1_1.txt"
+        "./samples/encrypted.output/test1_1_smaller.cbc",
+        "./samples/decrypted.output/test1_1_smaller.txt"
     )]
     #[case::large_text(
         "./samples/decrypted/text_larger_than_block_size.txt",
-        "./samples/encrypted.output/test1_2.cbc",
-        "./samples/decrypted.output/test1_2.txt"
+        "./samples/encrypted.output/test1_2_larger.cbc",
+        "./samples/decrypted.output/test1_2_larger.txt"
     )]
     #[case::image(
         "./samples/decrypted/image.png",
-        "./samples/encrypted.output/test1_3.cbc",
-        "./samples/decrypted.output/test1_3.png"
+        "./samples/encrypted.output/test1_3_image.cbc",
+        "./samples/decrypted.output/test1_3_image.png"
     )]
     fn test1_crypter_of_openssl(input_file: &str, encrypted_file: &str, decrypted_file: &str) {
         let key = b"01234567890123456789012345678901";

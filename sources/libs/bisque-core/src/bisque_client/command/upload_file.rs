@@ -32,7 +32,7 @@ impl BisqueClient {
                 .into_key();
 
             let iv = RandomBytes::generate().into_iv();
-            Encrypter::new(file, &key, &iv).map_err(here!())?
+            Encrypter::embed_iv(file, &key, &iv).map_err(here!())?
         };
         let request = upload_file::Request { metadata, reader };
         self.drive_client.upload_file(request).map_err(here!())?;

@@ -1,5 +1,5 @@
 use crate::openssl_impls::Crypter;
-use crate::Error::{CannotCreateDecrypter, CannotReadIv};
+use crate::Error::{CannotCreateDecrypter, CannotReadEmbeddedIv};
 use crate::Result;
 use openssl::symm;
 use openssl::symm::{Cipher, Mode};
@@ -11,21 +11,32 @@ pub struct Decrypter<R> {
 }
 
 impl<R: Read> Decrypter<R> {
-    pub fn new(mut reader: R, key: &[u8]) -> Result<Self> {
-        let cipher = Cipher::aes_256_cbc();
+    pub fn new(reader: R, key: &[u8; 32], iv: &[u8; 16]) -> Result<Self> {
+        Self::create(reader, key, iv, vec![])
+    }
 
-        // extract iv bytes from head of reader
+    pub fn extract_iv(mut reader: R, key: &[u8; 32]) -> Result<Self> {
+        let iv = Self::extract_iv_from_header(&mut reader)?;
+        Self::create(reader, key, &iv, vec![])
+    }
+
+    fn create(reader: R, key: &[u8; 32], iv: &[u8; 16], embedded: Vec<u8>) -> Result<Self> {
+        let cipher = Cipher::aes_256_cbc();
+        let crypter = symm::Crypter::new(cipher, Mode::Decrypt, key, Some(iv))
+            .map_err(|cause| CannotCreateDecrypter { cause })?;
+
+        Ok(Self {
+            inner: Crypter::new(reader, crypter, cipher.block_size(), embedded.to_vec())?,
+        })
+    }
+
+    fn extract_iv_from_header(reader: &mut R) -> Result<[u8; 16]> {
         let mut iv = [0; 16];
         reader
             .read_exact(&mut iv)
-            .map_err(|cause| CannotReadIv { cause })?;
+            .map_err(|cause| CannotReadEmbeddedIv { cause })?;
 
-        let openssl_crypter = symm::Crypter::new(cipher, Mode::Decrypt, key, Some(&iv))
-            .map_err(|cause| CannotCreateDecrypter { cause })?;
-
-        Ok(Decrypter {
-            inner: Crypter::new(reader, openssl_crypter, cipher.block_size(), vec![])?,
-        })
+        Ok(iv)
     }
 }
 
@@ -43,39 +54,85 @@ mod tests {
     use std::fs::File;
     use std::io::{Read, Write};
 
-    #[rstest(input_file, decrypted_file, expected_file)]
-    #[case::empty_text(
-        "./samples/encrypted/empty_v2.cbc",
-        "./samples/decrypted.output/test4_0.txt",
-        "./samples/decrypted/empty.txt"
-    )]
-    #[case::small_text(
-        "./samples/encrypted/text_smaller_than_block_size_v2.cbc",
-        "./samples/decrypted.output/test4_1.txt",
-        "./samples/decrypted/text_smaller_than_block_size.txt"
-    )]
-    #[case::large_text(
-        "./samples/encrypted/text_larger_than_block_size_v2.cbc",
-        "./samples/decrypted.output/test4_2.txt",
-        "./samples/decrypted/text_larger_than_block_size.txt"
-    )]
-    #[case::image(
-        "./samples/encrypted/image_v2.cbc",
-        "./samples/decrypted.output/test4_3.png",
-        "./samples/decrypted/image.png"
-    )]
-    fn test4_decrypter(input_file: &str, decrypted_file: &str, expected_file: &str) {
-        let key = b"01234567890123456789012345678901";
-        let mut decrypter = Decrypter::new(File::open(input_file).unwrap(), key).unwrap();
+    mod test_new {
+        use super::*;
 
-        let mut file = File::create(decrypted_file).unwrap();
-        let mut bytes = vec![];
-        let _len = decrypter.read_to_end(&mut bytes).unwrap();
-        file.write_all(&bytes).unwrap();
+        #[rstest(input_file, decrypted_file, expected_file)]
+        #[case::empty_text(
+            "./samples/encrypted/empty.cbc",
+            "./samples/decrypted.output/test7_0_empty.txt",
+            "./samples/decrypted/empty.txt"
+        )]
+        #[case::small_text(
+            "./samples/encrypted/text_smaller_than_block_size.cbc",
+            "./samples/decrypted.output/test7_1_smaller.txt",
+            "./samples/decrypted/text_smaller_than_block_size.txt"
+        )]
+        #[case::large_text(
+            "./samples/encrypted/text_larger_than_block_size.cbc",
+            "./samples/decrypted.output/test7_2_larger.txt",
+            "./samples/decrypted/text_larger_than_block_size.txt"
+        )]
+        #[case::image(
+            "./samples/encrypted/image.cbc",
+            "./samples/decrypted.output/test7_3_image.png",
+            "./samples/decrypted/image.png"
+        )]
+        fn test7(input_file: &str, decrypted_file: &str, expected_file: &str) {
+            let key = b"01234567890123456789012345678901";
+            let iv = b"0123456789012345";
+            let mut decrypter = Decrypter::new(File::open(input_file).unwrap(), key, iv).unwrap();
 
-        // openssl_usage::decrypt_file(input_file, expected_file, key, iv).unwrap();
-        let expected_bytes = fs::read(expected_file).unwrap();
-        let actual_bytes = fs::read(decrypted_file).unwrap();
-        assert_eq!(actual_bytes, expected_bytes);
+            let mut file = File::create(decrypted_file).unwrap();
+            let mut bytes = vec![];
+            let _len = decrypter.read_to_end(&mut bytes).unwrap();
+            file.write_all(&bytes).unwrap();
+
+            // openssl_usage::decrypt_file(input_file, expected_file, key, iv).unwrap();
+            let expected_bytes = fs::read(expected_file).unwrap();
+            let actual_bytes = fs::read(decrypted_file).unwrap();
+            assert_eq!(actual_bytes, expected_bytes);
+        }
+    }
+
+    mod test_extract_iv {
+        use super::*;
+
+        #[rstest(input_file, decrypted_file, expected_file)]
+        #[case::empty_text(
+            "./samples/encrypted/empty_v2.cbc",
+            "./samples/decrypted.output/test4_0_empty.txt",
+            "./samples/decrypted/empty.txt"
+        )]
+        #[case::small_text(
+            "./samples/encrypted/text_smaller_than_block_size_v2.cbc",
+            "./samples/decrypted.output/test4_1_smaller.txt",
+            "./samples/decrypted/text_smaller_than_block_size.txt"
+        )]
+        #[case::large_text(
+            "./samples/encrypted/text_larger_than_block_size_v2.cbc",
+            "./samples/decrypted.output/test4_2_larger.txt",
+            "./samples/decrypted/text_larger_than_block_size.txt"
+        )]
+        #[case::image(
+            "./samples/encrypted/image_v2.cbc",
+            "./samples/decrypted.output/test4_3_image.png",
+            "./samples/decrypted/image.png"
+        )]
+        fn test4(input_file: &str, decrypted_file: &str, expected_file: &str) {
+            let key = b"01234567890123456789012345678901";
+            let mut decrypter =
+                Decrypter::extract_iv(File::open(input_file).unwrap(), key).unwrap();
+
+            let mut file = File::create(decrypted_file).unwrap();
+            let mut bytes = vec![];
+            let _len = decrypter.read_to_end(&mut bytes).unwrap();
+            file.write_all(&bytes).unwrap();
+
+            // openssl_usage::decrypt_file(input_file, expected_file, key, iv).unwrap();
+            let expected_bytes = fs::read(expected_file).unwrap();
+            let actual_bytes = fs::read(decrypted_file).unwrap();
+            assert_eq!(actual_bytes, expected_bytes);
+        }
     }
 }
