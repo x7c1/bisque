@@ -39,10 +39,10 @@ impl<R: Read> Read for Encrypter<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::openssl_impls::helper::{write_file, write_file_in_chunks};
     use rstest::rstest;
     use std::fs;
     use std::fs::File;
-    use std::io::{Read, Write};
 
     mod test_new {
         use super::*;
@@ -72,11 +72,7 @@ mod tests {
             let key = b"01234567890123456789012345678901";
             let iv = b"0123456789012345";
             let mut encrypter = Encrypter::new(File::open(input_file).unwrap(), key, iv).unwrap();
-
-            let mut file = File::create(encrypted_file).unwrap();
-            let mut bytes = vec![];
-            let _len = encrypter.read_to_end(&mut bytes).unwrap();
-            file.write_all(&bytes).unwrap();
+            write_file(encrypted_file, &mut encrypter);
 
             let expected_bytes = fs::read(expected_file).unwrap();
             let actual_bytes = fs::read(encrypted_file).unwrap();
@@ -92,13 +88,8 @@ mod tests {
             let key = b"01234567890123456789012345678901";
             let iv = b"0123456789012345";
             let mut encrypter = Encrypter::new(File::open(input_file).unwrap(), key, iv).unwrap();
+            write_file_in_chunks(output_file, &mut encrypter, create_uneven_bytes());
 
-            let mut file = File::create(output_file).unwrap();
-            for bytes in create_uneven_bytes() {
-                let mut buffer = vec![0; bytes];
-                let loaded = encrypter.read(&mut buffer).unwrap();
-                let _written = file.write(&buffer[..loaded]).unwrap();
-            }
             let expected_bytes = fs::read(expected_file).unwrap();
             let actual_bytes = fs::read(output_file).unwrap();
             assert_eq!(actual_bytes, expected_bytes);
@@ -107,6 +98,7 @@ mod tests {
 
     mod test_embed_iv {
         use super::*;
+
         #[rstest(input_file, encrypted_file, expected_file)]
         #[case::empty_text(
             "./samples/decrypted/empty.txt",
@@ -134,10 +126,7 @@ mod tests {
             let mut encrypter =
                 Encrypter::embed_iv(File::open(input_file).unwrap(), key, iv).unwrap();
 
-            let mut file = File::create(encrypted_file).unwrap();
-            let mut bytes = vec![];
-            let _len = encrypter.read_to_end(&mut bytes).unwrap();
-            file.write_all(&bytes).unwrap();
+            write_file(encrypted_file, &mut encrypter);
 
             let expected_bytes = fs::read(expected_file).unwrap();
             let actual_bytes = fs::read(encrypted_file).unwrap();
@@ -155,12 +144,8 @@ mod tests {
             let mut encrypter =
                 Encrypter::embed_iv(File::open(input_file).unwrap(), key, iv).unwrap();
 
-            let mut file = File::create(output_file).unwrap();
-            for bytes in create_uneven_bytes() {
-                let mut buffer = vec![0; bytes];
-                let loaded = encrypter.read(&mut buffer).unwrap();
-                let _written = file.write(&buffer[..loaded]).unwrap();
-            }
+            write_file_in_chunks(output_file, &mut encrypter, create_uneven_bytes());
+
             let expected_bytes = fs::read(expected_file).unwrap();
             let actual_bytes = fs::read(output_file).unwrap();
             assert_eq!(actual_bytes, expected_bytes);

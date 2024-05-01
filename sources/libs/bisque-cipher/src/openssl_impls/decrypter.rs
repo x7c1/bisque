@@ -49,10 +49,10 @@ impl<R: Read> Read for Decrypter<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::openssl_impls::helper::write_file;
     use rstest::rstest;
     use std::fs;
     use std::fs::File;
-    use std::io::{Read, Write};
 
     mod test_new {
         use super::*;
@@ -125,12 +125,5 @@ mod tests {
             let actual_bytes = fs::read(decrypted_file).unwrap();
             assert_eq!(actual_bytes, expected_bytes);
         }
-    }
-
-    fn write_file(path: &str, reader: &mut impl Read) {
-        let mut file = File::create(path).unwrap();
-        let mut bytes = vec![];
-        let _len = reader.read_to_end(&mut bytes).unwrap();
-        file.write_all(&bytes).unwrap();
     }
 }
