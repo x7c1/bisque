@@ -30,7 +30,7 @@ pub fn run(args: Args) -> crate::Result<()> {
         key_file_path: args.key_file,
         src_name: args.file_name.clone(),
         src_folder_id: args.folder_id,
-        dst_file_path: PathBuf::from(args.download_dir).join(args.file_name),
+        dst_dir_path: PathBuf::from(args.download_dir),
     })?;
     Ok(())
 }

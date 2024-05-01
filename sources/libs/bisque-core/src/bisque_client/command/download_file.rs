@@ -11,7 +11,7 @@ use std::path::PathBuf;
 pub struct Params {
     /// key file to encrypt/decrypt
     pub key_file_path: String,
-    pub dst_file_path: PathBuf,
+    pub dst_dir_path: PathBuf,
     pub src_name: String,
     pub src_folder_id: String,
 }
@@ -37,7 +37,12 @@ impl BisqueClient {
         let key = RandomBytes::restore_from_file(&params.key_file_path).map_err(here!())?;
         let mut reader = Decrypter::extract_iv(response, &key.into_key()).map_err(here!())?;
 
-        let mut file = std::fs::File::create(&params.dst_file_path).map_err(here!())?;
+        // according to the behavior of google drive web (browser),
+        // slash is replaced with underscore.
+        let dst_file_path =
+            PathBuf::from(&params.dst_dir_path).join(params.src_name.replace('/', "_"));
+
+        let mut file = std::fs::File::create(dst_file_path).map_err(here!())?;
         io::copy(&mut reader, &mut file).map_err(here!())?;
 
         Ok(())
@@ -45,7 +50,7 @@ impl BisqueClient {
 }
 
 fn require_single_file(
-    response: list_files::Response,
+    response: list_files::SuccessResponse,
     params: &Params,
 ) -> std::result::Result<File, Error> {
     match response.files.as_slice() {
