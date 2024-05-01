@@ -1,6 +1,6 @@
 use crate::openssl_impls::Crypter;
 use crate::Error::CannotCreateEncrypter;
-use crate::Result;
+use crate::{EncryptionKey, Iv, Result};
 use openssl::symm;
 use openssl::symm::{Cipher, Mode};
 use std::io;
@@ -11,21 +11,33 @@ pub struct Encrypter<R> {
 }
 
 impl<R: Read> Encrypter<R> {
-    pub fn new(reader: R, key: &[u8; 32], iv: &[u8; 16]) -> Result<Self> {
+    pub fn new(reader: R, key: impl Into<EncryptionKey>, iv: impl Into<Iv>) -> Result<Self> {
         Self::create(reader, key, iv, vec![])
     }
 
-    pub fn embed_iv(reader: R, key: &[u8; 32], iv: &[u8; 16]) -> Result<Self> {
-        Self::create(reader, key, iv, iv.to_vec())
+    pub fn embed_iv(reader: R, key: impl Into<EncryptionKey>, iv: impl Into<Iv>) -> Result<Self> {
+        let iv = iv.into();
+        let embedded = iv.as_bytes().to_vec();
+        Self::create(reader, key, iv, embedded)
     }
 
-    fn create(reader: R, key: &[u8; 32], iv: &[u8; 16], embedded: Vec<u8>) -> Result<Self> {
+    fn create(
+        reader: R,
+        key: impl Into<EncryptionKey>,
+        iv: impl Into<Iv>,
+        embedded: Vec<u8>,
+    ) -> Result<Self> {
         let cipher = Cipher::aes_256_cbc();
-        let crypter = symm::Crypter::new(cipher, Mode::Encrypt, key, Some(iv))
-            .map_err(|cause| CannotCreateEncrypter { cause })?;
+        let crypter = symm::Crypter::new(
+            cipher,
+            Mode::Encrypt,
+            key.into().as_bytes(),
+            Some(iv.into().as_bytes()),
+        )
+        .map_err(|cause| CannotCreateEncrypter { cause })?;
 
         Ok(Self {
-            inner: Crypter::new(reader, crypter, cipher.block_size(), embedded.to_vec())?,
+            inner: Crypter::new(reader, crypter, cipher.block_size(), embedded)?,
         })
     }
 }

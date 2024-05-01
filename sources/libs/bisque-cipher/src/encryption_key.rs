@@ -1,20 +1,26 @@
 use crate::Error::{CannotReadKeyFile, CannotWriteKeyFile, KeyFileAlreadyExists, WrongSizeKeyFile};
-use crate::Result;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use crate::{seed, Result};
 use std::fs;
 use std::path::Path;
 
-pub struct RandomBytes([u8; Self::SIZE]);
+pub struct EncryptionKey([u8; 32]);
 
-impl RandomBytes {
+impl EncryptionKey {
     const SIZE: usize = 32;
 
-    pub fn generate() -> RandomBytes {
-        let seed = Self::generate_seed();
+    pub fn generate() -> Self {
+        let seed = seed::generate();
         let mut key = [0; Self::SIZE];
         key.copy_from_slice(&seed[..Self::SIZE]);
-        RandomBytes(key)
+        Self(key)
+    }
+
+    pub fn as_bytes(&self) -> &[u8; Self::SIZE] {
+        &self.0
+    }
+
+    pub fn from_bytes(bytes: &[u8; Self::SIZE]) -> Self {
+        Self(*bytes)
     }
 
     pub fn restore_from_file(path: impl AsRef<Path>) -> Result<Self> {
@@ -32,7 +38,7 @@ impl RandomBytes {
         }
         let mut array = [0; Self::SIZE];
         array.copy_from_slice(&bytes);
-        Ok(RandomBytes(array))
+        Ok(Self(array))
     }
 
     pub fn write_to_file(&self, path: &str) -> Result<()> {
@@ -48,19 +54,10 @@ impl RandomBytes {
         })?;
         Ok(())
     }
+}
 
-    pub fn into_key(self) -> [u8; 32] {
-        self.0
-    }
-
-    pub fn into_iv(self) -> [u8; 16] {
-        self.0[..16].try_into().unwrap()
-    }
-
-    fn generate_seed() -> [u8; Self::SIZE * 2] {
-        let mut seed = [0; Self::SIZE * 2];
-        let mut rng = StdRng::from_entropy();
-        rng.fill(&mut seed);
-        seed
+impl From<&[u8; 32]> for EncryptionKey {
+    fn from(bytes: &[u8; 32]) -> Self {
+        Self(*bytes)
     }
 }
