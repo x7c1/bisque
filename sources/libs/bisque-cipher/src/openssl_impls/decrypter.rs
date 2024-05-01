@@ -81,14 +81,10 @@ mod tests {
         fn test7(input_file: &str, decrypted_file: &str, expected_file: &str) {
             let key = b"01234567890123456789012345678901";
             let iv = b"0123456789012345";
-            let mut decrypter = Decrypter::new(File::open(input_file).unwrap(), key, iv).unwrap();
+            let file = File::open(input_file).unwrap();
+            let mut decrypter = Decrypter::new(file, key, iv).unwrap();
+            write_file(decrypted_file, &mut decrypter);
 
-            let mut file = File::create(decrypted_file).unwrap();
-            let mut bytes = vec![];
-            let _len = decrypter.read_to_end(&mut bytes).unwrap();
-            file.write_all(&bytes).unwrap();
-
-            // openssl_usage::decrypt_file(input_file, expected_file, key, iv).unwrap();
             let expected_bytes = fs::read(expected_file).unwrap();
             let actual_bytes = fs::read(decrypted_file).unwrap();
             assert_eq!(actual_bytes, expected_bytes);
@@ -121,18 +117,20 @@ mod tests {
         )]
         fn test4(input_file: &str, decrypted_file: &str, expected_file: &str) {
             let key = b"01234567890123456789012345678901";
-            let mut decrypter =
-                Decrypter::extract_iv(File::open(input_file).unwrap(), key).unwrap();
+            let file = File::open(input_file).unwrap();
+            let mut decrypter = Decrypter::extract_iv(file, key).unwrap();
+            write_file(decrypted_file, &mut decrypter);
 
-            let mut file = File::create(decrypted_file).unwrap();
-            let mut bytes = vec![];
-            let _len = decrypter.read_to_end(&mut bytes).unwrap();
-            file.write_all(&bytes).unwrap();
-
-            // openssl_usage::decrypt_file(input_file, expected_file, key, iv).unwrap();
             let expected_bytes = fs::read(expected_file).unwrap();
             let actual_bytes = fs::read(decrypted_file).unwrap();
             assert_eq!(actual_bytes, expected_bytes);
         }
+    }
+
+    fn write_file(path: &str, reader: &mut impl Read) {
+        let mut file = File::create(path).unwrap();
+        let mut bytes = vec![];
+        let _len = reader.read_to_end(&mut bytes).unwrap();
+        file.write_all(&bytes).unwrap();
     }
 }
