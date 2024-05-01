@@ -3,7 +3,7 @@ use crate::command::download_file::Error::{MultipleFiles, NotFound};
 use crate::{here, Result};
 use bisque_cipher::{Decrypter, RandomBytes};
 use bisque_google_drive::drive::{download_file, list_files};
-use bisque_google_drive::schemas::File;
+use bisque_google_drive::schemas::{File, FileName};
 use std::io;
 use std::path::PathBuf;
 
@@ -12,7 +12,7 @@ pub struct Params {
     /// key file to encrypt/decrypt
     pub key_file_path: String,
     pub dst_dir_path: PathBuf,
-    pub src_name: String,
+    pub src_name: FileName,
     pub src_folder_id: String,
 }
 
@@ -37,10 +37,8 @@ impl BisqueClient {
         let key = RandomBytes::restore_from_file(&params.key_file_path).map_err(here!())?;
         let mut reader = Decrypter::extract_iv(response, &key.into_key()).map_err(here!())?;
 
-        // according to the behavior of google drive web (browser),
-        // slash is replaced with underscore.
         let dst_file_path =
-            PathBuf::from(&params.dst_dir_path).join(params.src_name.replace('/', "_"));
+            PathBuf::from(&params.dst_dir_path).join(params.src_name.escape_for_file_system());
 
         let mut file = std::fs::File::create(dst_file_path).map_err(here!())?;
         io::copy(&mut reader, &mut file).map_err(here!())?;
@@ -56,11 +54,11 @@ fn require_single_file(
     match response.files.as_slice() {
         [file] => Ok(file.clone()),
         [] => Err(NotFound {
-            name: params.src_name.clone(),
+            name: params.src_name.clone().into_inner(),
             folder_id: params.src_folder_id.clone(),
         }),
         _ => Err(MultipleFiles {
-            name: params.src_name.clone(),
+            name: params.src_name.clone().into_inner(),
             folder_id: params.src_folder_id.clone(),
             files: response.files,
         }),

@@ -1,5 +1,6 @@
 use bisque_core::AccessTokenLoader;
 use bisque_core::{command::download_file, BisqueClient};
+use bisque_google_drive::schemas::FileName;
 use clap::Parser;
 use std::path::PathBuf;
 
@@ -28,7 +29,7 @@ pub fn run(args: Args) -> crate::Result<()> {
     let client = BisqueClient::new(access_token)?;
     client.download_file(download_file::Params {
         key_file_path: args.key_file,
-        src_name: args.file_name.clone(),
+        src_name: FileName::new(args.file_name.clone())?,
         src_folder_id: args.folder_id,
         dst_dir_path: PathBuf::from(args.download_dir),
     })?;

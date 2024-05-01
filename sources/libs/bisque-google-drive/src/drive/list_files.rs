@@ -1,11 +1,11 @@
 use crate::drive::GoogleDriveClient;
-use crate::schemas::File;
+use crate::schemas::{File, FileName};
 use crate::{here, Result};
 use reqwest::Url;
 
 pub struct Request {
     pub folder_id: String,
-    pub name: String,
+    pub name: FileName,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -50,7 +50,7 @@ impl GoogleDriveClient {
                 format!(
                     "'{}' in parents and trashed = false and name = '{}'",
                     request.folder_id,
-                    request.name.replace('\\', "\\\\").replace('\'', "\\'"),
+                    request.name.escape_for_drive_api(),
                 ),
             )],
         )

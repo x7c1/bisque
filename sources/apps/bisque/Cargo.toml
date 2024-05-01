@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 bisque-cipher = { path = "../../libs/bisque-cipher" }
 bisque-core = { path = "../../libs/bisque-core" }
+bisque-google-drive = { path = "../../libs/bisque-google-drive" }
 
 clap = { version = "4.5.3", features = ["derive"] }

@@ -4,54 +4,25 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    Inherited(Box<dyn Debug>),
+    Cipher(bisque_cipher::Error),
+    Core(bisque_core::Error),
+    GoogleDrive(bisque_google_drive::Error),
 }
 
-#[derive(Debug)]
-pub struct Location {
-    pub file: &'static str,
-    pub line: u32,
-}
-
-#[macro_export]
-macro_rules! locate {
-    () => {
-        $crate::error::Location {
-            file: file!(),
-            line: line!(),
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! here {
-    () => {
-        $crate::error::attach($crate::locate!())
-    };
-}
-
-#[derive(Debug)]
-pub struct Located<A: Debug> {
-    pub cause: A,
-    pub location: Location,
-}
-
-pub fn attach<E>(location: Location) -> impl FnOnce(E) -> Error
-where
-    Located<E>: Into<Error>,
-    E: Debug,
-{
-    |cause| Located { cause, location }.into()
-}
-
-impl<A: Debug + 'static> From<Located<A>> for Error {
-    fn from(value: Located<A>) -> Self {
-        Error::Inherited(Box::new(value))
+impl From<bisque_cipher::Error> for Error {
+    fn from(e: bisque_cipher::Error) -> Self {
+        Error::Cipher(e)
     }
 }
 
 impl From<bisque_core::Error> for Error {
     fn from(e: bisque_core::Error) -> Self {
-        Error::Inherited(Box::new(e))
+        Error::Core(e)
+    }
+}
+
+impl From<bisque_google_drive::Error> for Error {
+    fn from(e: bisque_google_drive::Error) -> Self {
+        Error::GoogleDrive(e)
     }
 }

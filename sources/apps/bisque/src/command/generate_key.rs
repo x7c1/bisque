@@ -1,4 +1,4 @@
-use crate::{here, Result};
+use crate::Result;
 use bisque_cipher::RandomBytes;
 use clap::Parser;
 
@@ -10,6 +10,6 @@ pub struct Args {
 
 pub fn run(args: Args) -> Result<()> {
     let key = RandomBytes::generate();
-    key.write_to_file(&args.file_path).map_err(here!())?;
+    key.write_to_file(&args.file_path)?;
     Ok(())
 }
